@@ -7,7 +7,8 @@
     tools:context=".UpdatePatientProfileActivity">
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:background="#FAFAFA">
 
 
         <Spinner
@@ -15,11 +16,11 @@
             style="@style/Widget.AppCompat.Spinner.Underlined"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="32dp"
+            android:layout_marginStart="24dp"
             android:layout_marginTop="8dp"
-            android:layout_marginEnd="32dp"
-            android:minHeight="40dp"
+            android:layout_marginEnd="24dp"
             android:entries="@array/division"
+            android:minHeight="40dp"
             app:layout_constraintEnd_toEndOf="@+id/update_patient_hospital_edittext"
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="@+id/update_patient_hospital_edittext"
@@ -31,7 +32,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:fontFamily="@font/montserrat_bold"
-            android:text="@string/update_patient_label_spinner_division"
+            android:text="@string/label_division"
             android:textColor="@color/textColorDark"
             android:textSize="16sp"
             app:layout_constraintEnd_toEndOf="@+id/update_patient_hospital_edittext"
@@ -60,7 +61,7 @@
 
 
             android:fontFamily="@font/montserrat_bold"
-            android:text="@string/update_patient_heading_textview"
+            android:text="@string/update_profile"
             android:textColor="@color/textColorDark"
             android:textSize="18sp"
             app:layout_constraintEnd_toEndOf="parent"
@@ -76,7 +77,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
             android:fontFamily="@font/montserrat_bold"
-            android:text="@string/update_patient_label_name"
+            android:text="@string/label_name"
             android:textColor="@color/textColorDark"
             android:textSize="16sp"
             app:layout_constraintEnd_toEndOf="@+id/update_patient_name_edittext"
@@ -88,13 +89,13 @@
             android:id="@+id/update_patient_name_edittext"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="32dp"
+            android:layout_marginStart="24dp"
             android:layout_marginTop="8dp"
             android:layout_marginEnd="32dp"
             android:background="@drawable/edit_text_dark"
 
             android:fontFamily="@font/montserrat"
-            android:hint="@string/update_patient_name_edittext"
+            android:hint="@string/enter_name_hint"
             android:paddingStart="25dp"
             android:paddingTop="10dp"
             android:paddingEnd="20dp"
@@ -113,7 +114,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:fontFamily="@font/montserrat_bold"
-            android:text="@string/update_patient_label_age"
+            android:text="@string/label_age_1"
             android:textColor="@color/textColorDark"
             android:textSize="16sp"
             app:layout_constraintEnd_toEndOf="@+id/update_patient_age_edittext"
@@ -125,12 +126,12 @@
             android:id="@+id/update_patient_age_edittext"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="32dp"
+            android:layout_marginStart="24dp"
             android:layout_marginTop="8dp"
             android:layout_marginEnd="32dp"
             android:background="@drawable/edit_text_dark"
             android:fontFamily="@font/montserrat"
-            android:hint="@string/update_patient_age_edittext"
+            android:hint="@string/enter_age_hint"
 
             android:inputType="number"
             android:paddingStart="25dp"
@@ -151,7 +152,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:fontFamily="@font/montserrat_bold"
-            android:text="@string/update_patient_label_gender"
+            android:text="@string/label_gender"
             android:textColor="@color/textColorDark"
             android:textSize="16sp"
             app:layout_constraintEnd_toEndOf="@+id/update_patient_age_edittext"
@@ -163,204 +164,44 @@
             android:id="@+id/update_patient_male_icon"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="32dp"
+            android:layout_marginStart="96dp"
             android:layout_marginTop="16dp"
             android:src="@drawable/male_icon"
-            app:layout_constraintStart_toEndOf="@+id/update_patient_label_gender"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/update_patient_label_gender" />
 
         <ImageView
             android:id="@+id/update_patient_female_icon"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="92dp"
+            android:layout_marginEnd="96dp"
             android:src="@drawable/female_icon"
             app:layout_constraintBottom_toBottomOf="@+id/update_patient_male_icon"
-            app:layout_constraintStart_toEndOf="@+id/update_patient_male_icon"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="@+id/update_patient_male_icon"
             app:layout_constraintVertical_bias="0.0" />
 
-        <TextView
-            android:id="@+id/update_patient_label_blood_grp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:fontFamily="@font/montserrat_bold"
-            android:text="@string/update_patient_label_blood_grp"
-            android:textColor="@color/textColorDark"
-            android:textSize="16sp"
-            app:layout_constraintStart_toStartOf="@+id/update_patient_label_gender"
-            app:layout_constraintTop_toBottomOf="@+id/update_patient_male_icon" />
-
-
-        <TextView
-            android:id="@+id/update_patient_bld_a_positive"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:layout_marginTop="8dp"
-
-            android:background="@drawable/blood_grp_not_selected"
-            android:fontFamily="@font/montserrat"
-            android:textColor="@color/textColorGrey"
-
-            android:textAlignment="center"
-            android:gravity="center"
-            android:text="A+"
-            android:textSize="14sp"
-            app:layout_constraintStart_toStartOf="@+id/update_patient_label_blood_grp"
-            app:layout_constraintTop_toBottomOf="@+id/update_patient_label_blood_grp" />
-
-        <TextView
-            android:id="@+id/update_patient_bld_a_negative"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:layout_marginStart="8dp"
-            android:textColor="@color/textColorGrey"
-            android:background="@drawable/blood_grp_not_selected"
-            android:fontFamily="@font/montserrat"
-
-
-            android:gravity="center"
-            android:text="A-"
-            android:textAlignment="center"
-            android:textSize="14sp"
-            app:layout_constraintBottom_toBottomOf="@+id/update_patient_bld_a_positive"
-            app:layout_constraintStart_toEndOf="@+id/update_patient_bld_a_positive"
-            app:layout_constraintTop_toTopOf="@+id/update_patient_bld_a_positive" />
-
-        <TextView
-            android:id="@+id/update_patient_bld_b_positive"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:layout_marginStart="8dp"
-            android:textColor="@color/textColorGrey"
-            android:background="@drawable/blood_grp_not_selected"
-            android:fontFamily="@font/montserrat"
-
-
-            android:gravity="center"
-            android:text="B+"
-            android:textAlignment="center"
-            android:textSize="14sp"
-            app:layout_constraintBottom_toBottomOf="@+id/update_patient_bld_a_negative"
-            app:layout_constraintStart_toEndOf="@+id/update_patient_bld_a_negative"
-            app:layout_constraintTop_toTopOf="@+id/update_patient_bld_a_negative" />
-
-        <TextView
-            android:id="@+id/update_patient_bld_b_negative"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:layout_marginStart="8dp"
-            android:textColor="@color/textColorGrey"
-            android:background="@drawable/blood_grp_not_selected"
-            android:fontFamily="@font/montserrat"
-
-
-            android:gravity="center"
-            android:text="B-"
-            android:textAlignment="center"
-            android:textSize="14sp"
-            app:layout_constraintBottom_toBottomOf="@+id/update_patient_bld_b_positive"
-            app:layout_constraintStart_toEndOf="@+id/update_patient_bld_b_positive"
-            app:layout_constraintTop_toTopOf="@+id/update_patient_bld_b_positive" />
-
-        <TextView
-            android:id="@+id/update_patient_bld_o_positive"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:layout_marginStart="8dp"
-            android:textColor="@color/textColorGrey"
-            android:background="@drawable/blood_grp_not_selected"
-            android:fontFamily="@font/montserrat"
-
-
-            android:gravity="center"
-            android:text="O+"
-            android:textAlignment="center"
-            android:textSize="14sp"
-            app:layout_constraintBottom_toBottomOf="@+id/update_patient_bld_b_negative"
-            app:layout_constraintStart_toEndOf="@+id/update_patient_bld_b_negative"
-            app:layout_constraintTop_toTopOf="@+id/update_patient_bld_b_negative" />
-
-        <TextView
-            android:id="@+id/update_patient_bld_o_negative"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:layout_marginStart="8dp"
-            android:layout_marginEnd="32dp"
-            android:textColor="@color/textColorGrey"
-            android:background="@drawable/blood_grp_not_selected"
-            android:fontFamily="@font/montserrat"
-            android:gravity="center"
-
-
-            android:text="O-"
-            android:textAlignment="center"
-            android:textSize="14sp"
-            app:layout_constraintBottom_toBottomOf="@+id/update_patient_bld_o_positive"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@+id/update_patient_bld_o_positive"
-            app:layout_constraintTop_toTopOf="@+id/update_patient_bld_o_positive"
-            app:layout_constraintVertical_bias="0.0" />
-
-        <TextView
-            android:id="@+id/update_patient_bld_ab_positive"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:layout_marginTop="16dp"
-            android:textColor="@color/textColorGrey"
-            android:background="@drawable/blood_grp_not_selected"
-            android:fontFamily="@font/montserrat"
-            android:textAlignment="center"
-            android:gravity="center"
-
-            android:text="AB+"
-            android:textSize="14sp"
-            app:layout_constraintEnd_toEndOf="@+id/update_patient_bld_a_positive"
-            app:layout_constraintStart_toStartOf="@+id/update_patient_bld_a_positive"
-            app:layout_constraintTop_toBottomOf="@+id/update_patient_bld_a_positive" />
-
-        <TextView
-            android:id="@+id/update_patient_bld_ab_negative"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:background="@drawable/blood_grp_not_selected"
-            android:textColor="@color/textColorGrey"
-            android:fontFamily="@font/montserrat"
-            android:paddingLeft="10dp"
-            android:paddingTop="15dp"
-            android:paddingRight="10dp"
-            android:paddingBottom="15dp"
-
-
-            android:text="AB-"
-            android:textSize="14sp"
-            app:layout_constraintBottom_toBottomOf="@+id/update_patient_bld_ab_positive"
-            app:layout_constraintStart_toEndOf="@+id/update_patient_bld_ab_positive"
-            app:layout_constraintTop_toTopOf="@+id/update_patient_bld_ab_positive" />
 
         <TextView
             android:id="@+id/update_patient_label_hospital"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
+            android:layout_marginStart="32dp"
+            android:layout_marginTop="16dp"
             android:fontFamily="@font/montserrat_bold"
-            android:text="@string/update_patient_label_hospital"
+            android:text="@string/label_hospital"
             android:textColor="@color/textColorDark"
             android:textSize="16sp"
-            app:layout_constraintEnd_toEndOf="@+id/update_patient_label_blood_grp"
-            app:layout_constraintHorizontal_bias="0.0"
-            app:layout_constraintStart_toStartOf="@+id/update_patient_label_blood_grp"
-            app:layout_constraintTop_toBottomOf="@+id/update_patient_bld_ab_positive" />
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/update_patient_male_icon" />
 
         <EditText
             android:id="@+id/update_patient_hospital_edittext"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="32dp"
+            android:layout_marginStart="24dp"
             android:layout_marginTop="8dp"
-            android:layout_marginEnd="32dp"
+            android:layout_marginEnd="24dp"
             android:background="@drawable/edit_text_dark"
             android:fontFamily="@font/montserrat"
             android:gravity="center_vertical"
@@ -382,7 +223,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:fontFamily="@font/montserrat_bold"
-            android:text="@string/update_patient_label_spinner_district"
+            android:text="@string/label_district"
             android:textColor="@color/textColorDark"
             android:textSize="16sp"
             app:layout_constraintEnd_toEndOf="@+id/update_patient_hospital_edittext"
@@ -392,12 +233,12 @@
 
         <Spinner
             android:id="@+id/update_patient_district_spinner"
+            style="@style/Widget.AppCompat.Spinner.Underlined"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="32dp"
+            android:layout_marginStart="24dp"
             android:layout_marginTop="8dp"
-            android:layout_marginEnd="32dp"
-            style="@style/Widget.AppCompat.Spinner.Underlined"
+            android:layout_marginEnd="24dp"
             android:minHeight="40dp"
             app:layout_constraintEnd_toEndOf="@+id/update_patient_hospital_edittext"
             app:layout_constraintHorizontal_bias="0.49"
@@ -409,13 +250,13 @@
             android:id="@+id/update_patient_date_textview"
             android:layout_width="match_parent"
             android:layout_height="40dp"
-            android:layout_marginStart="32dp"
+            android:layout_marginStart="24dp"
             android:layout_marginTop="8dp"
-            android:layout_marginEnd="32dp"
+            android:layout_marginEnd="24dp"
             android:background="@drawable/edit_text_dark"
             android:fontFamily="@font/montserrat"
             android:gravity="center_vertical"
-            android:hint="@string/update_patient_date_textview"
+            android:hint="@string/select_date_textview"
             android:minHeight="40dp"
             android:paddingLeft="15dp"
             android:paddingRight="15dp"
@@ -439,39 +280,57 @@
             app:layout_constraintStart_toStartOf="@+id/update_patient_district_spinner"
             app:layout_constraintTop_toBottomOf="@+id/update_patient_district_spinner" />
 
-        <CheckBox
-            android:id="@+id/update_patient_plasma_checkbox"
-            android:layout_width="match_parent"
+
+        <TextView
+            android:id="@+id/update_patient_number_of_unit_required"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="32dp"
-            android:layout_marginTop="32dp"
-            android:layout_marginEnd="32dp"
-            android:fontFamily="@font/montserrat"
-            android:text="@string/update_patient_plasma_checkbox"
+            android:layout_marginTop="16dp"
+            android:fontFamily="@font/montserrat_bold"
+            android:text="@string/quantity_of_blood_needed_in_units"
             android:textColor="@color/textColorDark"
             android:textSize="16sp"
-            app:layout_constraintEnd_toEndOf="@+id/update_patient_date_textview"
             app:layout_constraintStart_toStartOf="@+id/update_patient_date_textview"
             app:layout_constraintTop_toBottomOf="@+id/update_patient_date_textview" />
+
+        <EditText
+            android:id="@+id/update_patient_number_of_unit_editText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="24dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="24dp"
+            android:background="@drawable/edit_text_dark"
+            android:gravity="center_vertical"
+            android:hint="@string/how_many_bags_units_of_blood_is_needed"
+            android:inputType="number"
+            android:maxLength="2"
+            android:minHeight="40dp"
+            android:paddingLeft="15dp"
+            android:paddingRight="15dp"
+            android:textColor="@color/textColorDark"
+            android:textSize="15sp"
+            app:layout_constraintEnd_toEndOf="@+id/update_patient_number_of_unit_required"
+            app:layout_constraintStart_toStartOf="@+id/update_patient_number_of_unit_required"
+            app:layout_constraintTop_toBottomOf="@+id/update_patient_number_of_unit_required" />
 
         <Button
             android:id="@+id/update_patient_request_btn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="32dp"
-            android:layout_marginTop="32dp"
-            android:layout_marginEnd="32dp"
+            android:layout_marginTop="16dp"
             android:layout_marginBottom="32dp"
             android:background="@drawable/button_style_colored"
             android:fontFamily="@font/montserrat_bold"
             android:maxWidth="350dp"
             android:minWidth="320dp"
-            android:text="@string/update_patient_request_btn"
+            android:text="@string/update_profile"
             android:textColor="#ffffff"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="@+id/update_patient_plasma_checkbox"
-            app:layout_constraintStart_toStartOf="@+id/update_patient_plasma_checkbox"
-            app:layout_constraintTop_toBottomOf="@+id/update_patient_plasma_checkbox" />
+            app:layout_constraintEnd_toEndOf="@+id/update_patient_date_textview"
+            app:layout_constraintStart_toStartOf="@+id/update_patient_date_textview"
+            app:layout_constraintTop_toBottomOf="@+id/update_patient_number_of_unit_editText"
+            app:layout_constraintVertical_bias="1.0" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </ScrollView>

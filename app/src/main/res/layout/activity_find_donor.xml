@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="#FAFAFA"
     tools:context=".FindDonorActivity">
 
     <TextView
@@ -50,12 +51,15 @@
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                android:layout_height="wrap_content"
+                android:background="#FAFAFA"
+                >
 
                 <androidx.constraintlayout.widget.ConstraintLayout
                     android:id="@+id/constraintLayout3"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
+                    android:background="#FAFAFA"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent">
@@ -90,26 +94,27 @@
 
                                 android:textColor="#ffffff"
                                 android:textSize="18sp"
-                                app:layout_constraintEnd_toEndOf="parent"
-                                app:layout_constraintHorizontal_bias="0.192"
-                                app:layout_constraintStart_toStartOf="parent"
+                                app:layout_constraintEnd_toEndOf="@+id/find_donor_number_of_patients_textview"
+                                app:layout_constraintHorizontal_bias="0.45"
+                                app:layout_constraintStart_toStartOf="@+id/find_donor_number_of_patients_textview"
                                 app:layout_constraintTop_toTopOf="parent" />
 
                             <TextView
                                 android:id="@+id/find_donor_number_of_patients_textview"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="8dp"
                                 android:layout_marginBottom="32dp"
 
                                 android:fontFamily="@font/montserrat_bold"
-                                android:text="Patients"
+                                android:text="@string/dashboard_text_no_of_patients"
                                 android:textColor="#ffffff"
                                 android:textSize="18sp"
                                 app:layout_constraintBottom_toBottomOf="parent"
-                                app:layout_constraintEnd_toEndOf="@+id/find_donor_number_of_patients"
-                                app:layout_constraintStart_toStartOf="@+id/find_donor_number_of_patients"
-                                app:layout_constraintTop_toBottomOf="@+id/find_donor_number_of_patients" />
+                                app:layout_constraintEnd_toEndOf="parent"
+                                app:layout_constraintHorizontal_bias="0.125"
+                                app:layout_constraintStart_toStartOf="parent"
+                                app:layout_constraintTop_toBottomOf="@+id/find_donor_number_of_patients"
+                                app:layout_constraintVertical_bias="0.0" />
 
                             <Button
                                 android:id="@+id/find_donor_add_patient_btn"
@@ -121,7 +126,7 @@
                                 android:padding="15dp"
 
 
-                                android:text="@string/find_donor_add_patient_btn"
+                                android:text="@string/add_patient"
                                 android:textColor="@color/colorAccent"
                                 app:layout_constraintBottom_toBottomOf="parent"
                                 app:layout_constraintEnd_toEndOf="parent"
@@ -136,9 +141,8 @@
                         android:id="@+id/find_donor_forpatients_textview"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="32dp"
-                        android:layout_marginTop="16dp"
-                        android:layout_marginEnd="270dp"
+                        android:layout_marginStart="24dp"
+                        android:layout_marginTop="8dp"
                         android:fontFamily="@font/montserrat_bold"
                         android:text="@string/my_patients"
                         android:textColor="@color/textColorDark"
@@ -190,8 +194,7 @@
                     android:id="@+id/find_donor_fordonors_textview"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="32dp"
-                    android:layout_marginTop="20dp"
+                    android:layout_marginStart="24dp"
                     android:fontFamily="@font/montserrat_bold"
                     android:text="@string/find_donor_fordonors_textview"
                     android:textColor="@color/textColorDark"
@@ -217,18 +220,17 @@
                     android:id="@+id/find_donor_fordonors_district_edittext"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="32dp"
-                    android:layout_marginTop="7dp"
-                    android:layout_marginEnd="32dp"
+                    android:layout_marginStart="24dp"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginEnd="24dp"
                     android:background="@drawable/edit_text_dark"
                     android:entries="@array/Dhaka"
-                    android:hint="@string/find_donor_fordonors_district_edittext"
+                    android:hint="@string/hint_enter_district"
                     android:inputType="textPersonName"
                     android:minHeight="40dp"
                     android:padding="10dp"
-                    app:layout_constraintEnd_toEndOf="@+id/find_donor_fordonors_textview"
-                    app:layout_constraintHorizontal_bias="0.0"
-                    app:layout_constraintStart_toStartOf="@+id/find_donor_fordonors_label_district"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="@+id/find_donor_fordonors_textview"
                     app:layout_constraintTop_toBottomOf="@+id/find_donor_fordonors_label_district" />
 
                 <androidx.constraintlayout.widget.ConstraintLayout

@@ -78,38 +78,78 @@ public class PatientResponseAdapter extends RecyclerView.Adapter<PatientResponse
 
         patientDataModel = patientDataModels.get(position);
 
-        downloadImage(patientDataModel.getPhone(), holder.patientImageView);
+        downloadImage(patientDataModel.getPhone(), holder.patientImageView, patientDataModel.getGender());
 
 
         holder.nameTextView.setText(patientDataModel.getName());
-        holder.typeTextView.setText(patientDataModel.getNeed());
+        if(patientDataModel.getNeed().equals("Blood")){
+            holder.typeTextView.setText(holder.itemView.getContext().getResources().getString(R.string.blood));
+        }
+        else if(patientDataModel.getNeed().equals("Plasma")){
+            holder.typeTextView.setText(holder.itemView.getContext().getResources().getString(R.string.plasma));
+        }
         holder.bloodTextView.setText(patientDataModel.getBloodGroup());
         holder.locationTextView.setText(patientDataModel.getDistrict());
-        holder.dateTextView.setText(context.getResources().getString(R.string.adapter_Date)+"               "+patientDataModel.getDate());
-        if(patientDataModel.getGender().equals("male")) {
+        holder.dateTextView.setText(context.getResources().getString(R.string.date_of_requirement)+"               "+patientDataModel.getDate());
+        if(patientDataModel.getGender().toLowerCase().equals("male")) {
             holder.patientImageView.setImageResource(R.drawable.profile_icon_male);
         } else {
             holder.patientImageView.setImageResource(R.drawable.profile_icon_female);
         }
 
-        if(patientDataModel.getServerMsg().equals("Pending")){
+        if(patientDataModel.getServerMsg().toLowerCase().equals("pending")){
             holder.acceptButton.setVisibility(View.VISIBLE);
-            holder.acceptButton.setText(context.getResources().getString(R.string.adapter_Pending));
+            holder.acceptButton.setText(context.getResources().getString(R.string.pending));
             holder.acceptButton.setBackgroundResource(R.drawable.button_style_orange);
             holder.acceptButton.setTextColor(Color.parseColor("#FFFFFF"));
             holder.declineButton.setVisibility(View.GONE);
         }
-        else if(patientDataModel.getServerMsg().equals("Accepted")){
+        else if(patientDataModel.getServerMsg().toLowerCase().equals("accepted")){
             holder.acceptButton.setVisibility(View.VISIBLE);
-            holder.acceptButton.setText(context.getResources().getString(R.string.adapter_Accepted));
+            holder.acceptButton.setText(context.getResources().getString(R.string.accepted));
             holder.acceptButton.setBackgroundResource(R.drawable.button_style_green);
             holder.acceptButton.setTextColor(Color.parseColor("#FFFFFF"));
             holder.declineButton.setVisibility(View.GONE);
         }
-        else if(patientDataModel.getServerMsg().equals("Declined")){
+        else if(patientDataModel.getServerMsg().toLowerCase().equals("declined")){
             holder.acceptButton.setVisibility(View.VISIBLE);
-            holder.acceptButton.setText(context.getResources().getString(R.string.adapter_Declined));
+            holder.acceptButton.setText(context.getResources().getString(R.string.declined));
             holder.acceptButton.setBackgroundResource(R.drawable.button_style_red);
+            holder.acceptButton.setTextColor(Color.parseColor("#FFFFFF"));
+            holder.declineButton.setVisibility(View.GONE);
+        }
+        else if(patientDataModel.getServerMsg().toLowerCase().equals("donated")){
+            holder.acceptButton.setVisibility(View.VISIBLE);
+            holder.acceptButton.setText(context.getResources().getString(R.string.donated));
+            holder.acceptButton.setBackgroundResource(R.drawable.button_style_green);
+            holder.acceptButton.setTextColor(Color.parseColor("#FFFFFF"));
+            holder.declineButton.setVisibility(View.GONE);
+        }
+        else if(patientDataModel.getServerMsg().toLowerCase().equals("not_donated")){
+            holder.acceptButton.setVisibility(View.VISIBLE);
+            holder.acceptButton.setText(context.getResources().getString(R.string.not_donated));
+            holder.acceptButton.setBackgroundResource(R.drawable.button_style_yellow);
+            holder.acceptButton.setTextColor(Color.parseColor("#FFFFFF"));
+            holder.declineButton.setVisibility(View.GONE);
+        }
+
+        else if(patientDataModel.getServerMsg().toLowerCase().equals("claimed")){
+            holder.acceptButton.setVisibility(View.VISIBLE);
+            holder.acceptButton.setText(context.getResources().getString(R.string.claimed));
+            holder.acceptButton.setBackgroundResource(R.drawable.button_style_green);
+            holder.acceptButton.setTextColor(Color.parseColor("#FFFFFF"));
+            holder.declineButton.setVisibility(View.GONE);
+        }
+        else if(patientDataModel.getServerMsg().toLowerCase().equals("not_confirmed")){
+            holder.acceptButton.setVisibility(View.VISIBLE);
+            holder.acceptButton.setText(context.getResources().getString(R.string.not_confirmed));
+            holder.acceptButton.setBackgroundResource(R.drawable.button_style_yellow);
+            holder.acceptButton.setTextColor(Color.parseColor("#FFFFFF"));
+            holder.declineButton.setVisibility(View.GONE);
+        } else if(patientDataModel.getServerMsg().toLowerCase().equals("canceled")){
+            holder.acceptButton.setVisibility(View.VISIBLE);
+            holder.acceptButton.setText(context.getResources().getString(R.string.canceled));
+            holder.acceptButton.setBackgroundResource(R.drawable.button_style_yellow);
             holder.acceptButton.setTextColor(Color.parseColor("#FFFFFF"));
             holder.declineButton.setVisibility(View.GONE);
         }
@@ -190,24 +230,24 @@ public class PatientResponseAdapter extends RecyclerView.Adapter<PatientResponse
 
 
 
-    private void downloadImage(String title, ImageView genderImageView) {
+    private void downloadImage(String title, ImageView genderImageView, String gender) {
         RetroInterface retroInterface = RetroInstance.getRetro();
         Call<ImageDataModel> incomingResponse = retroInterface.downloadImage(title);
         incomingResponse.enqueue(new Callback<ImageDataModel>() {
             @Override
             public void onResponse(Call<ImageDataModel> call, Response<ImageDataModel> response) {
 
-                if (response.body().getServerMsg().equals("true")) {
+                if (response.body().getServerMsg().toLowerCase().equals("true")) {
                     String image = response.body().getImage();
                     byte[] imageByte = Base64.decode(image, Base64.DEFAULT);
                     insertBitmap = BitmapFactory.decodeByteArray(imageByte, 0, imageByte.length);
                     insertBitmap = scaleImage(insertBitmap);
                     showImage(genderImageView, insertBitmap, R.drawable.profile_icon_male);
-                } else if (response.body().getServerMsg().equals("false")) {
+                } else if (response.body().getServerMsg().toLowerCase().equals("false")) {
 
-                    if (loggedInUserGender.toLowerCase().equals("male")) {
+                    if (gender.toLowerCase().toLowerCase().equals("male")) {
                         showDrawable(genderImageView, R.drawable.profile_icon_male);
-                    } else if (loggedInUserGender.toLowerCase().equals("female")) {
+                    } else if (gender.toLowerCase().toLowerCase().equals("female")) {
                         showDrawable(genderImageView, R.drawable.profile_icon_female);
                     }
                 }
@@ -217,12 +257,10 @@ public class PatientResponseAdapter extends RecyclerView.Adapter<PatientResponse
             @Override
             public void onFailure(Call<ImageDataModel> call, Throwable t) {
 
-                ToastCreator.toastCreatorRed(context, "Profile Image retrieve failed. " + t.getMessage());
 
-
-                if (loggedInUserGender.toLowerCase().equals("male")) {
+                if (gender.toLowerCase().equals("male")) {
                     genderImageView.setImageResource(R.drawable.profile_icon_male);
-                } else if (loggedInUserGender.toLowerCase().equals("female")) {
+                } else if (gender.toLowerCase().equals("female")) {
                     genderImageView.setImageResource(R.drawable.profile_icon_female);
                 }
             }

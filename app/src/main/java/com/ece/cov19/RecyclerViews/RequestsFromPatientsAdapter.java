@@ -6,6 +6,7 @@ import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
@@ -15,7 +16,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.constraintlayout.widget.ConstraintLayout;
@@ -23,7 +23,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.ece.cov19.DataModels.ImageDataModel;
 import com.ece.cov19.DataModels.PatientDataModel;
-import com.ece.cov19.Functions.ToastCreator;
 import com.ece.cov19.R;
 import com.ece.cov19.RetroServices.RetroInstance;
 import com.ece.cov19.RetroServices.RetroInterface;
@@ -36,9 +35,8 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 import static android.content.Context.MODE_PRIVATE;
-import static com.ece.cov19.DataModels.LoggedInUserData.loggedInUserGender;
 
-public class PatientRequestsAlphaAdapter extends RecyclerView.Adapter<PatientRequestsAlphaViewHolder> {
+public class RequestsFromPatientsAdapter extends RecyclerView.Adapter<RequestsFromPatientsViewHolder> {
 
     public Context context;
     public PatientDataModel patientDataModel;
@@ -51,24 +49,23 @@ public class PatientRequestsAlphaAdapter extends RecyclerView.Adapter<PatientReq
     Bitmap insertBitmap;
     Uri imageUri;
 
-    public PatientRequestsAlphaAdapter(Context context, ArrayList<PatientDataModel> patientDataModels) {
+    public RequestsFromPatientsAdapter(Context context, ArrayList<PatientDataModel> patientDataModels) {
         this.context = context;
         this.patientDataModels = patientDataModels;
     }
 
     @NonNull
     @Override
-    public PatientRequestsAlphaViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+    public RequestsFromPatientsViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
 
         LayoutInflater layoutInflater = LayoutInflater.from(context);
-        View view = layoutInflater.inflate(R.layout.seeking_help_child, parent, false);
-        PatientRequestsAlphaViewHolder patientRequestsAlphaViewHolder = new PatientRequestsAlphaViewHolder(view, patientDataModels);
-        return patientRequestsAlphaViewHolder;
+        View view = layoutInflater.inflate(R.layout.request_patient_child, parent, false);
+        RequestsFromPatientsViewHolder requestsFromPatientsViewHolder = new RequestsFromPatientsViewHolder(view, patientDataModels);
+        return requestsFromPatientsViewHolder;
     }
 
     @Override
-    public void onBindViewHolder(@NonNull PatientRequestsAlphaViewHolder holder, int position) {
-
+    public void onBindViewHolder(@NonNull RequestsFromPatientsViewHolder holder, int position) {
 
         langPrefs=context.getSharedPreferences(Language_pref,MODE_PRIVATE);
         if(langPrefs.contains(Selected_language)){
@@ -77,25 +74,78 @@ public class PatientRequestsAlphaAdapter extends RecyclerView.Adapter<PatientReq
         }
         patientDataModel = patientDataModels.get(position);
 
-        downloadImage(patientDataModel.getPhone(), holder.patientImageView);
-
-
-        holder.donateTextView.setVisibility(View.VISIBLE);
-        holder.donateTextView.setText("View Requests");
-
         holder.nameTextView.setText(patientDataModel.getName());
         holder.typeTextView.setText(patientDataModel.getNeed());
         holder.bloodTextView.setText(patientDataModel.getBloodGroup());
-        holder.locationTextView.setText(patientDataModel.getHospital());
-        holder.dateTextView.setText(context.getResources().getString(R.string.adapter_Date)+"              "+patientDataModel.getDate());
-        if(patientDataModel.getGender().equals("male")) {
-            holder.patientImageView.setImageResource(R.drawable.profile_icon_male);
-        } else {
-            holder.patientImageView.setImageResource(R.drawable.profile_icon_female);
+        holder.locationTextView.setText(patientDataModel.getDistrict());
+        holder.dateTextView.setText(context.getResources().getString(R.string.date_of_requirement)+"              " + patientDataModel.getDate());
+
+        if(patientDataModel.getNeed().equals("Blood")){
+            holder.typeTextView.setText(holder.itemView.getContext().getResources().getString(R.string.blood));
+        }
+        else if(patientDataModel.getNeed().equals("Plasma")){
+            holder.typeTextView.setText(holder.itemView.getContext().getResources().getString(R.string.plasma));
+        }
+        else if(patientDataModel.getNeed().equals("Blood and Plasma")){
+            holder.typeTextView.setText(holder.itemView.getContext().getResources().getString(R.string.bloodandplasma));
         }
 
+        downloadImage(patientDataModel.getPhone(), holder.patientImageView, patientDataModel.getGender());
 
+        if (patientDataModel.getServerMsg().toLowerCase().equals("pending")) {
+            holder.acceptButton.setVisibility(View.VISIBLE);
+            holder.acceptButton.setText(context.getResources().getString(R.string.pending));
+            holder.acceptButton.setBackgroundResource(R.drawable.button_style_orange);
+            holder.acceptButton.setTextColor(Color.parseColor("#FFFFFF"));
+            holder.declineButton.setVisibility(View.GONE);
+        } else if (patientDataModel.getServerMsg().toLowerCase().equals("accepted")) {
+            holder.acceptButton.setVisibility(View.VISIBLE);
+            holder.acceptButton.setText(context.getResources().getString(R.string.accepted));
+            holder.acceptButton.setBackgroundResource(R.drawable.button_style_green);
+            holder.acceptButton.setTextColor(Color.parseColor("#FFFFFF"));
+            holder.declineButton.setVisibility(View.GONE);
+        } else if (patientDataModel.getServerMsg().toLowerCase().equals("declined")) {
+            holder.acceptButton.setVisibility(View.VISIBLE);
+            holder.acceptButton.setText(context.getResources().getString(R.string.declined));
+            holder.acceptButton.setBackgroundResource(R.drawable.button_style_red);
+            holder.acceptButton.setTextColor(Color.parseColor("#FFFFFF"));
+            holder.declineButton.setVisibility(View.GONE);
+        }
+        else if(patientDataModel.getServerMsg().toLowerCase().equals("donated")){
+            holder.acceptButton.setVisibility(View.VISIBLE);
+            holder.acceptButton.setText(context.getResources().getString(R.string.donated));
+            holder.acceptButton.setBackgroundResource(R.drawable.button_style_green);
+            holder.acceptButton.setTextColor(Color.parseColor("#FFFFFF"));
+            holder.declineButton.setVisibility(View.GONE);
+        }
+        else if(patientDataModel.getServerMsg().toLowerCase().equals("not_donated")){
+            holder.acceptButton.setVisibility(View.VISIBLE);
+            holder.acceptButton.setText(context.getResources().getString(R.string.not_donated));
+            holder.acceptButton.setBackgroundResource(R.drawable.button_style_yellow);
+            holder.acceptButton.setTextColor(Color.parseColor("#FFFFFF"));
+            holder.declineButton.setVisibility(View.GONE);
+        }
 
+        else if(patientDataModel.getServerMsg().toLowerCase().equals("claimed")){
+            holder.acceptButton.setVisibility(View.VISIBLE);
+            holder.acceptButton.setText(context.getResources().getString(R.string.claimed));
+            holder.acceptButton.setBackgroundResource(R.drawable.button_style_green);
+            holder.acceptButton.setTextColor(Color.parseColor("#FFFFFF"));
+            holder.declineButton.setVisibility(View.GONE);
+        }
+        else if(patientDataModel.getServerMsg().toLowerCase().equals("not_confirmed")){
+            holder.acceptButton.setVisibility(View.VISIBLE);
+            holder.acceptButton.setText(context.getResources().getString(R.string.not_confirmed));
+            holder.acceptButton.setBackgroundResource(R.drawable.button_style_yellow);
+            holder.acceptButton.setTextColor(Color.parseColor("#FFFFFF"));
+            holder.declineButton.setVisibility(View.GONE);
+        }    else if(patientDataModel.getServerMsg().toLowerCase().equals("canceled")){
+            holder.acceptButton.setVisibility(View.VISIBLE);
+            holder.acceptButton.setText(context.getResources().getString(R.string.canceled));
+            holder.acceptButton.setBackgroundResource(R.drawable.button_style_yellow);
+            holder.acceptButton.setTextColor(Color.parseColor("#FFFFFF"));
+            holder.declineButton.setVisibility(View.GONE);
+        }
 
     }
 
@@ -103,6 +153,7 @@ public class PatientRequestsAlphaAdapter extends RecyclerView.Adapter<PatientReq
     public int getItemCount() {
         return patientDataModels.size();
     }
+
 
     private Bitmap scaleImage(Bitmap bitmap) {
 
@@ -172,24 +223,24 @@ public class PatientRequestsAlphaAdapter extends RecyclerView.Adapter<PatientReq
 
 
 
-    private void downloadImage(String title, ImageView genderImageView) {
+    private void downloadImage(String title, ImageView genderImageView, String gender) {
         RetroInterface retroInterface = RetroInstance.getRetro();
         Call<ImageDataModel> incomingResponse = retroInterface.downloadImage(title);
         incomingResponse.enqueue(new Callback<ImageDataModel>() {
             @Override
             public void onResponse(Call<ImageDataModel> call, Response<ImageDataModel> response) {
 
-                if (response.body().getServerMsg().equals("true")) {
+                if (response.body().getServerMsg().toLowerCase().equals("true")) {
                     String image = response.body().getImage();
                     byte[] imageByte = Base64.decode(image, Base64.DEFAULT);
                     insertBitmap = BitmapFactory.decodeByteArray(imageByte, 0, imageByte.length);
                     insertBitmap = scaleImage(insertBitmap);
                     showImage(genderImageView, insertBitmap, R.drawable.profile_icon_male);
-                } else if (response.body().getServerMsg().equals("false")) {
+                } else if (response.body().getServerMsg().toLowerCase().equals("false")) {
 
-                    if (loggedInUserGender.toLowerCase().equals("male")) {
+                    if (gender.toLowerCase().toLowerCase().equals("male")) {
                         showDrawable(genderImageView, R.drawable.profile_icon_male);
-                    } else if (loggedInUserGender.toLowerCase().equals("female")) {
+                    } else if (gender.toLowerCase().toLowerCase().equals("female")) {
                         showDrawable(genderImageView, R.drawable.profile_icon_female);
                     }
                 }
@@ -199,12 +250,10 @@ public class PatientRequestsAlphaAdapter extends RecyclerView.Adapter<PatientReq
             @Override
             public void onFailure(Call<ImageDataModel> call, Throwable t) {
 
-                ToastCreator.toastCreatorRed(context, "Profile Image retrieve failed. " + t.getMessage());
 
-
-                if (loggedInUserGender.toLowerCase().equals("male")) {
+                if (gender.toLowerCase().equals("male")) {
                     genderImageView.setImageResource(R.drawable.profile_icon_male);
-                } else if (loggedInUserGender.toLowerCase().equals("female")) {
+                } else if (gender.toLowerCase().equals("female")) {
                     genderImageView.setImageResource(R.drawable.profile_icon_female);
                 }
             }

@@ -64,7 +64,7 @@ public class FindDonorBetaAdapter extends RecyclerView.Adapter<FindDonorBetaView
 
         userDataModel = userDataModels.get(position);
 
-        downloadImage(userDataModel.getPhone(), holder.donorImageView);
+        downloadImage(userDataModel.getPhone(), holder.donorImageView, userDataModel.getGender());
 
 
         if(userDataModel.getBloodGroup().equals(FindPatientData.findPatientBloodGroup)){
@@ -74,15 +74,23 @@ public class FindDonorBetaAdapter extends RecyclerView.Adapter<FindDonorBetaView
         holder.nameTextView.setText(userDataModel.getName());
         holder.locationTextView.setText(userDataModel.getDistrict());
         holder.bloodTextView.setText(userDataModel.getBloodGroup());
-        holder.donortype.setText(userDataModel.getDonor());
 
-        if(userDataModel.getGender().equals("male")) {
+        if(userDataModel.getGender().toLowerCase().equals("male")) {
             holder.donorImageView.setImageResource(R.drawable.profile_icon_male);
         } else {
             holder.donorImageView.setImageResource(R.drawable.profile_icon_female);
         }
         holder.locationImageView.setImageResource(R.drawable.location_icon);
 
+        if(userDataModel.getDonor().equals("Blood")){
+            holder.donortype.setText(holder.itemView.getContext().getResources().getString(R.string.blood));
+        }
+        else if(userDataModel.getDonor().equals("Plasma")){
+            holder.donortype.setText(holder.itemView.getContext().getResources().getString(R.string.plasma));
+        }
+        else if(userDataModel.getDonor().equals("Blood and Plasma")){
+            holder.donortype.setText(holder.itemView.getContext().getResources().getString(R.string.bloodandplasma));
+        }
 
     }
 
@@ -159,24 +167,24 @@ public class FindDonorBetaAdapter extends RecyclerView.Adapter<FindDonorBetaView
 
 
 
-    private void downloadImage(String title, ImageView genderImageView) {
+    private void downloadImage(String title, ImageView genderImageView, String gender) {
         RetroInterface retroInterface = RetroInstance.getRetro();
         Call<ImageDataModel> incomingResponse = retroInterface.downloadImage(title);
         incomingResponse.enqueue(new Callback<ImageDataModel>() {
             @Override
             public void onResponse(Call<ImageDataModel> call, Response<ImageDataModel> response) {
 
-                if (response.body().getServerMsg().equals("true")) {
+                if (response.body().getServerMsg().toLowerCase().equals("true")) {
                     String image = response.body().getImage();
                     byte[] imageByte = Base64.decode(image, Base64.DEFAULT);
                     insertBitmap = BitmapFactory.decodeByteArray(imageByte, 0, imageByte.length);
                     insertBitmap = scaleImage(insertBitmap);
                     showImage(genderImageView, insertBitmap, R.drawable.profile_icon_male);
-                } else if (response.body().getServerMsg().equals("false")) {
+                } else if (response.body().getServerMsg().toLowerCase().equals("false")) {
 
-                    if (loggedInUserGender.toLowerCase().equals("male")) {
+                    if (gender.toLowerCase().toLowerCase().equals("male")) {
                         showDrawable(genderImageView, R.drawable.profile_icon_male);
-                    } else if (loggedInUserGender.toLowerCase().equals("female")) {
+                    } else if (gender.toLowerCase().toLowerCase().equals("female")) {
                         showDrawable(genderImageView, R.drawable.profile_icon_female);
                     }
                 }
@@ -185,12 +193,11 @@ public class FindDonorBetaAdapter extends RecyclerView.Adapter<FindDonorBetaView
 
             @Override
             public void onFailure(Call<ImageDataModel> call, Throwable t) {
-                ToastCreator.toastCreatorRed(context, "Profile Image retrieve failed. " + t.getMessage());
 
 
-                if (loggedInUserGender.toLowerCase().equals("male")) {
+                if (gender.toLowerCase().equals("male")) {
                     genderImageView.setImageResource(R.drawable.profile_icon_male);
-                } else if (loggedInUserGender.toLowerCase().equals("female")) {
+                } else if (gender.toLowerCase().equals("female")) {
                     genderImageView.setImageResource(R.drawable.profile_icon_female);
                 }
             }

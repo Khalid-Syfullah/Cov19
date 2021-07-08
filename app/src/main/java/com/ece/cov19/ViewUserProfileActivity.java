@@ -28,11 +28,13 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.PopupMenu;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.ece.cov19.DataModels.ImageDataModel;
 import com.ece.cov19.DataModels.LoggedInUserData;
 import com.ece.cov19.DataModels.UserDataModel;
+import com.ece.cov19.Functions.LoginUser;
 import com.ece.cov19.Functions.ToastCreator;
 import com.ece.cov19.RetroServices.RetroInstance;
 import com.ece.cov19.RetroServices.RetroInterface;
@@ -62,11 +64,14 @@ import static com.ece.cov19.DataModels.LoggedInUserData.loggedInUserPass;
 import static com.ece.cov19.DataModels.LoggedInUserData.loggedInUserPhone;
 import static com.ece.cov19.DataModels.LoggedInUserData.loggedInUserThana;
 import static com.ece.cov19.LoginActivity.LOGIN_SHARED_PREFS;
+import static com.ece.cov19.LoginActivity.LOGIN_USER_PASS;
+import static com.ece.cov19.LoginActivity.LOGIN_USER_PHONE;
 
 public class ViewUserProfileActivity extends AppCompatActivity {
     private TextView nameTextView, phoneTextView, bloodGroupTextView, addressTextView, ageTextView, donorInfoTextView;
     private ImageView genderImageView,backbtn,profileImageView;
     private Button logoutBtn,updateInfoBtn,updatePasswordBtn, deleteBtn;
+    private ProgressBar progressBar;
     Bitmap insertBitmap;
     Uri imageUri;
 
@@ -88,6 +93,7 @@ public class ViewUserProfileActivity extends AppCompatActivity {
         updateInfoBtn=findViewById(R.id.profile_update_button);
         updatePasswordBtn=findViewById(R.id.profile_change_password_btn);
         deleteBtn = findViewById(R.id.profile_delete_button);
+        progressBar = findViewById(R.id.profile_progressBar);
 
 //      setting logged in user info
         nameTextView.setText(loggedInUserName);
@@ -127,6 +133,7 @@ public class ViewUserProfileActivity extends AppCompatActivity {
         logoutBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                logoutBtn.setEnabled(false);
 
                logoutAlertDialog();
             }
@@ -191,6 +198,23 @@ public class ViewUserProfileActivity extends AppCompatActivity {
     protected void onResume(){
         super.onResume();
         setContentView(R.layout.activity_view_user_profile);
+        if(LoginUser.checkLoginStat().equals("failed")){
+            SharedPreferences sharedPreferences = getSharedPreferences(LOGIN_SHARED_PREFS, MODE_PRIVATE);
+            String phone,password;
+
+            if (sharedPreferences.contains(LOGIN_USER_PHONE) && sharedPreferences.contains(LOGIN_USER_PASS)) {
+                phone = sharedPreferences.getString(LOGIN_USER_PHONE, "");
+                password= sharedPreferences.getString(LOGIN_USER_PASS, "");
+
+                LoginUser.loginUser(this,phone,password,ViewUserProfileActivity.class);
+            }
+            else {
+                ToastCreator.toastCreatorRed(this,getString(R.string.login_failed));
+                Intent intent=new Intent(this,LoginActivity.class);
+                startActivity(intent);
+                finish();
+            }
+        }
 
         nameTextView = findViewById(R.id.profile_name);
         phoneTextView = findViewById(R.id.profile_phone);
@@ -205,6 +229,7 @@ public class ViewUserProfileActivity extends AppCompatActivity {
         updateInfoBtn=findViewById(R.id.profile_update_button);
         updatePasswordBtn=findViewById(R.id.profile_change_password_btn);
         deleteBtn = findViewById(R.id.profile_delete_button);
+        progressBar = findViewById(R.id.profile_progressBar);
 
 //      setting logged in user info
         nameTextView.setText(loggedInUserName);
@@ -243,6 +268,7 @@ public class ViewUserProfileActivity extends AppCompatActivity {
         logoutBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                logoutBtn.setEnabled(false);
               logoutAlertDialog();
             }
         });
@@ -275,6 +301,7 @@ public class ViewUserProfileActivity extends AppCompatActivity {
         updateInfoBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                updateInfoBtn.setEnabled(false);
                 Intent intent=new Intent(ViewUserProfileActivity.this, UpdateUserProfileActivity.class);
                 updateAlertDialog(intent);
 
@@ -285,6 +312,7 @@ public class ViewUserProfileActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 Intent intent= new Intent(ViewUserProfileActivity.this, UpdatePasswordActivity.class);
+                updatePasswordBtn.setEnabled(false);
                 intent.putExtra("phone", loggedInUserPhone);
                 confirmAlertDialog(intent);
 
@@ -294,7 +322,9 @@ public class ViewUserProfileActivity extends AppCompatActivity {
         deleteBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                deleteBtn.setEnabled(false);
                 deleteProfileAlertDialog();
+
             }
         });
     }
@@ -303,18 +333,23 @@ public class ViewUserProfileActivity extends AppCompatActivity {
     private void confirmAlertDialog(final Intent intent){
         AlertDialog.Builder builder = new AlertDialog.Builder(ViewUserProfileActivity.this);
         builder.setMessage(getResources().getString(R.string.are_you_sure));
-        builder.setPositiveButton(getResources().getString(R.string.profile_activity_yes), new DialogInterface.OnClickListener() {
+        builder.setCancelable(false);
+
+        builder.setPositiveButton(getResources().getString(R.string.yes_txt), new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int id) {
                 showAlertDialog(intent);
+
             }
         })
                 .setNegativeButton(getResources().getString(R.string.cancel), new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
                         dialog.dismiss();
+                        updatePasswordBtn.setEnabled(true);
                     }
                 });
 
         AlertDialog alertDialog=builder.create();
+        alertDialog.setCanceledOnTouchOutside(false);
         alertDialog.show();
     }
 
@@ -322,7 +357,8 @@ public class ViewUserProfileActivity extends AppCompatActivity {
 
 //                asking password with alertdialog
         final AlertDialog.Builder builder = new AlertDialog.Builder(ViewUserProfileActivity.this);
-        builder.setMessage(getResources().getString(R.string.profile_activity_Enter_Password));
+        builder.setMessage(getResources().getString(R.string.enter_password_hint));
+        builder.setCancelable(false);
 
 // Set up the input
         final EditText pass = new EditText(ViewUserProfileActivity.this);
@@ -337,16 +373,18 @@ public class ViewUserProfileActivity extends AppCompatActivity {
         builder.setView(pass);
 
 // Set up the buttons
-        builder.setPositiveButton(getResources().getString(R.string.profile_activity_ok), new DialogInterface.OnClickListener() {
+        builder.setPositiveButton(getResources().getString(R.string.ok_txt), new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
 
                 if(pass.getText().toString().equals(loggedInUserPass)){
 
                     startActivity(intent);
+                    updatePasswordBtn.setEnabled(true);
                 }
                 else{
-                    ToastCreator.toastCreatorRed(ViewUserProfileActivity.this, getResources().getString(R.string.profile_activity_Wrong_Password));
+                    ToastCreator.toastCreatorRed(ViewUserProfileActivity.this, getResources().getString(R.string.wrong_password_error));
+                    updatePasswordBtn.setEnabled(true);
                 }
             }
         });
@@ -354,10 +392,13 @@ public class ViewUserProfileActivity extends AppCompatActivity {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 dialog.cancel();
+                updatePasswordBtn.setEnabled(true);
             }
         });
+        AlertDialog alertDialog =builder.create();
+        alertDialog.setCanceledOnTouchOutside(false);
 
-        builder.show();
+        alertDialog.show();
 
     }
 
@@ -366,10 +407,10 @@ public class ViewUserProfileActivity extends AppCompatActivity {
     private void logoutAlertDialog(){
         AlertDialog.Builder builder = new AlertDialog.Builder(ViewUserProfileActivity.this);
         builder.setMessage(getResources().getString(R.string.are_you_sure));
-        builder.setPositiveButton(getResources().getString(R.string.profile_activity_yes), new DialogInterface.OnClickListener() {
+        builder.setCancelable(false);
+        builder.setPositiveButton(getResources().getString(R.string.yes_txt), new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int id) {
-                SharedPreferences sharedPreferences=getSharedPreferences(LOGIN_SHARED_PREFS,MODE_PRIVATE);
-                sharedPreferences.edit().clear().apply();
+
 
                 FirebaseInstanceId.getInstance().getInstanceId()
                         .addOnCompleteListener(new OnCompleteListener<InstanceIdResult>() {
@@ -384,18 +425,25 @@ public class ViewUserProfileActivity extends AppCompatActivity {
                                 String token = task.getResult().getToken();
                                 String msg = getString(R.string.fcm_token, token);
                                 Log.d(TAG, msg);
-
                                 RetroInterface retroInterface = RetroInstance.getRetro();
-                                Call<UserDataModel> incomingResponse = retroInterface.sendToken(LoggedInUserData.loggedInUserPhone,token);
+                                Call<UserDataModel> incomingResponse = retroInterface.deleteToken(LoggedInUserData.loggedInUserPhone,token);
                                 incomingResponse.enqueue(new Callback<UserDataModel>() {
                                     @Override
                                     public void onResponse(Call<UserDataModel> call, Response<UserDataModel> response) {
-
+                                        if(response.body().getServerMsg().equals("Success")) {
+                                            SharedPreferences sharedPreferences=getSharedPreferences(LOGIN_SHARED_PREFS,MODE_PRIVATE);
+                                            sharedPreferences.edit().clear().apply();
+                                            loggedInUserPhone = "";
+                                            Intent login = new Intent(ViewUserProfileActivity.this, LoginActivity.class);
+                                            login.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+                                            startActivity(login);
+                                            finish();
+                                        }
                                     }
 
                                     @Override
                                     public void onFailure(Call<UserDataModel> call, Throwable t) {
-
+                                    logoutBtn.setEnabled(true);
                                     }
                                 });
 
@@ -405,23 +453,19 @@ public class ViewUserProfileActivity extends AppCompatActivity {
 
 
 
-                loggedInUserPhone="";
-
-                Intent login= new Intent(ViewUserProfileActivity.this, LoginActivity.class);
-                login.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK|Intent.FLAG_ACTIVITY_NEW_TASK);
-                startActivity(login);
-                finish();
-
 
             }
         })
                 .setNegativeButton(getResources().getString(R.string.profile_activity_no), new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
                         dialog.dismiss();
+                        logoutBtn.setEnabled(true);
+
                     }
                 });
 
         AlertDialog alertDialog=builder.create();
+        alertDialog.setCanceledOnTouchOutside(false);
         alertDialog.show();
 
     }
@@ -430,18 +474,23 @@ public class ViewUserProfileActivity extends AppCompatActivity {
     private void updateAlertDialog(final Intent intent){
         AlertDialog.Builder builder = new AlertDialog.Builder(ViewUserProfileActivity.this);
         builder.setMessage(getResources().getString(R.string.are_you_sure));
-        builder.setPositiveButton(getResources().getString(R.string.profile_activity_yes), new DialogInterface.OnClickListener() {
+        builder.setCancelable(false);
+        builder.setPositiveButton(getResources().getString(R.string.yes_txt), new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int id) {
                 startActivity(intent);
+                updateInfoBtn.setEnabled(true);
             }
         })
                 .setNegativeButton(getResources().getString(R.string.cancel), new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
                         dialog.dismiss();
+                        updateInfoBtn.setEnabled(true);
+
                     }
                 });
 
         AlertDialog alertDialog=builder.create();
+        alertDialog.setCanceledOnTouchOutside(false);
         alertDialog.show();
     }
 
@@ -449,12 +498,14 @@ public class ViewUserProfileActivity extends AppCompatActivity {
 
         AlertDialog.Builder builder = new AlertDialog.Builder(ViewUserProfileActivity.this);
         builder.setMessage(getResources().getString(R.string.are_you_sure));
-        builder.setPositiveButton(getResources().getString(R.string.profile_delete_button), new DialogInterface.OnClickListener() {
+        builder.setCancelable(false);
+        builder.setPositiveButton(getResources().getString(R.string.delete_profile), new DialogInterface.OnClickListener() {
 
             public void onClick(DialogInterface dialog, int id) {
 
                 final AlertDialog.Builder builder = new AlertDialog.Builder(ViewUserProfileActivity.this);
-                builder.setMessage(getResources().getString(R.string.profile_activity_Enter_Password));
+                builder.setMessage(getResources().getString(R.string.enter_password_hint));
+                builder.setCancelable(false);
 
                 final EditText pass = new EditText(ViewUserProfileActivity.this);
 
@@ -466,15 +517,16 @@ public class ViewUserProfileActivity extends AppCompatActivity {
                 pass.setInputType(InputType.TYPE_TEXT_VARIATION_PASSWORD);
                 builder.setView(pass);
 
-                builder.setPositiveButton(getResources().getString(R.string.profile_activity_ok), new DialogInterface.OnClickListener() {
+                builder.setPositiveButton(getResources().getString(R.string.ok_txt), new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
 
                         if(pass.getText().toString().equals(loggedInUserPass)){
 
                             AlertDialog.Builder builder = new AlertDialog.Builder(ViewUserProfileActivity.this);
-                            builder.setMessage(getResources().getString(R.string.profile_activity_Confirm_delete));
-                            builder.setPositiveButton(getResources().getString(R.string.profile_delete_button), new DialogInterface.OnClickListener() {
+                            builder.setMessage(getResources().getString(R.string.delete_profile_are_you_sure));
+                            builder.setCancelable(false);
+                            builder.setPositiveButton(getResources().getString(R.string.delete_profile), new DialogInterface.OnClickListener() {
 
                                 public void onClick(DialogInterface dialog, int id) {
 
@@ -483,7 +535,8 @@ public class ViewUserProfileActivity extends AppCompatActivity {
                                     incomingResponse.enqueue(new Callback<UserDataModel>() {
                                         @Override
                                         public void onResponse(Call<UserDataModel> call, Response<UserDataModel> response) {
-                                            if(response.body().getServerMsg().equals("Success")){
+
+                                            if(response.body().getServerMsg().toLowerCase().equals("success")){
                                                 SharedPreferences sharedPreferences=getSharedPreferences(LOGIN_SHARED_PREFS,MODE_PRIVATE);
                                                 sharedPreferences.edit().clear().apply();
                                                 Intent login= new Intent(ViewUserProfileActivity.this, LoginActivity.class);
@@ -491,17 +544,20 @@ public class ViewUserProfileActivity extends AppCompatActivity {
                                                 startActivity(login);
                                                 finish();
                                                 ToastCreator.toastCreatorGreen(getApplicationContext(), getResources().getString(R.string.profile_activity_Delete_Successful));
-                                            }
-                                            else if(response.body().getServerMsg().equals("Failed")){
-                                                ToastCreator.toastCreatorRed(getApplicationContext(), getResources().getString(R.string.profile_activity_Delete_Failed));
 
                                             }
+                                            else if(response.body().getServerMsg().toLowerCase().equals("failed")){
+                                                ToastCreator.toastCreatorRed(getApplicationContext(), getResources().getString(R.string.delete_failed));
+
+
+                                            }
+                                            deleteBtn.setEnabled(true);
                                         }
 
                                         @Override
                                         public void onFailure(Call<UserDataModel> call, Throwable t) {
-                                            ToastCreator.toastCreatorRed(getApplicationContext(), getResources().getString(R.string.profile_activity_error));
-
+                                            ToastCreator.toastCreatorRed(getApplicationContext(), getResources().getString(R.string.connection_error));
+                                            deleteBtn.setEnabled(true);
                                         }
                                     });
                                 }
@@ -509,25 +565,30 @@ public class ViewUserProfileActivity extends AppCompatActivity {
                                     .setNegativeButton(getResources().getString(R.string.cancel), new DialogInterface.OnClickListener() {
                                         public void onClick(DialogInterface dialog, int id) {
                                             dialog.dismiss();
+                                            deleteBtn.setEnabled(true);
                                         }
                                     });
 
                             AlertDialog finalDialog=builder.create();
+                            finalDialog.setCanceledOnTouchOutside(false);
                             finalDialog.show();
 
                         }
                         else{
-                            ToastCreator.toastCreatorRed(ViewUserProfileActivity.this, getResources().getString(R.string.profile_activity_Wrong_Password));;
+                            ToastCreator.toastCreatorRed(ViewUserProfileActivity.this, getResources().getString(R.string.wrong_password_error));
+                            deleteBtn.setEnabled(true);
                         }
                     }
                 })
                         .setNegativeButton(getResources().getString(R.string.profile_activity_no), new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int id) {
                                 dialog.dismiss();
+                                deleteBtn.setEnabled(true);
                             }
                         });
 
                 AlertDialog passDialog=builder.create();
+                passDialog.setCanceledOnTouchOutside(false);
                 passDialog.show();
 
             }
@@ -535,10 +596,12 @@ public class ViewUserProfileActivity extends AppCompatActivity {
                 .setNegativeButton(getResources().getString(R.string.cancel), new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
                         dialog.dismiss();
+                        deleteBtn.setEnabled(true);
                     }
                 });
 
         AlertDialog firstDialog = builder.create();
+        firstDialog.setCanceledOnTouchOutside(false);
         firstDialog.show();
     }
 
@@ -547,6 +610,7 @@ public class ViewUserProfileActivity extends AppCompatActivity {
     private void deleteImageAlertDialog(){
         AlertDialog.Builder builder = new AlertDialog.Builder(ViewUserProfileActivity.this);
         builder.setMessage(getResources().getString(R.string.are_you_sure));
+        builder.setCancelable(false);
         builder.setPositiveButton(getResources().getString(R.string.profile_activity_Delete), new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int id) {
                 deleteImage(loggedInUserPhone);
@@ -559,6 +623,7 @@ public class ViewUserProfileActivity extends AppCompatActivity {
                 });
 
         AlertDialog alertDialog=builder.create();
+        alertDialog.setCanceledOnTouchOutside(false);
         alertDialog.show();
 
     }
@@ -692,10 +757,10 @@ public class ViewUserProfileActivity extends AppCompatActivity {
             @Override
             public void onResponse(Call<ImageDataModel> call, Response<ImageDataModel> response) {
 
-                if(response.body().getServerMsg().equals("true")) {
+                if(response.body().getServerMsg().toLowerCase().equals("true")) {
                     downloadImage(loggedInUserPhone);
                 }
-                else if(response.body().getServerMsg().equals("false")){
+                else if(response.body().getServerMsg().toLowerCase().equals("false")){
                     ToastCreator.toastCreatorRed(getApplicationContext(), getResources().getString(R.string.profile_activity_image_did_not_upload));
 
                 }
@@ -716,7 +781,7 @@ public class ViewUserProfileActivity extends AppCompatActivity {
             @Override
             public void onResponse(Call<ImageDataModel> call, Response<ImageDataModel> response) {
 
-                if(response.body().getServerMsg().equals("true")){
+                if(response.body().getServerMsg().toLowerCase().equals("true")){
                     String image = response.body().getImage();
                     byte[] imageByte = Base64.decode(image, Base64.DEFAULT);
                     insertBitmap = BitmapFactory.decodeByteArray(imageByte, 0, imageByte.length);
@@ -724,7 +789,7 @@ public class ViewUserProfileActivity extends AppCompatActivity {
                     showImage(genderImageView, insertBitmap, R.drawable.profile_icon_male);
                     }
 
-                    else if(response.body().getServerMsg().equals("false")) {
+                    else if(response.body().getServerMsg().toLowerCase().equals("false")) {
 
                     if (loggedInUserGender.toLowerCase().equals("male")) {
                         genderImageView.setImageResource(R.drawable.profile_icon_male);
@@ -737,7 +802,6 @@ public class ViewUserProfileActivity extends AppCompatActivity {
 
             @Override
             public void onFailure(Call<ImageDataModel> call, Throwable t) {
-                ToastCreator.toastCreatorRed(getApplicationContext(), getResources().getString(R.string.image_retrieve_failed));
 
 
                 if (loggedInUserGender.toLowerCase().equals("male")) {
@@ -756,7 +820,7 @@ public class ViewUserProfileActivity extends AppCompatActivity {
         incomingResponse.enqueue(new Callback<ImageDataModel>() {
             @Override
             public void onResponse(Call<ImageDataModel> call, Response<ImageDataModel> response) {
-                if(response.body().getServerMsg().equals("true")) {
+                if(response.body().getServerMsg().toLowerCase().equals("true")) {
                     downloadImage(loggedInUserPhone);
                     BitmapFactory.Options o = new BitmapFactory.Options();
                     o.inTargetDensity = DisplayMetrics.DENSITY_DEFAULT;
@@ -772,8 +836,8 @@ public class ViewUserProfileActivity extends AppCompatActivity {
 
 
                 }
-                else if(response.body().getServerMsg().equals("false")){
-                    ToastCreator.toastCreatorRed(getApplicationContext(), getResources().getString(R.string.profile_activity_image_not_found));
+                else if(response.body().getServerMsg().toLowerCase().equals("false")){
+                    ToastCreator.toastCreatorRed(getApplicationContext(), getResources().getString(R.string.image_not_found));
 
                 }
             }

@@ -11,9 +11,14 @@ import java.util.ArrayList;
 import retrofit2.Call;
 import retrofit2.http.Field;
 import retrofit2.http.FormUrlEncoded;
+import retrofit2.http.GET;
 import retrofit2.http.POST;
 
 public interface RetroInterface {
+
+    @GET("appVer.php")
+    Call<UserDataModel> latestVersion();
+
     @FormUrlEncoded
     @POST("registration.php")
     Call<UserDataModel> registerRetroMethod(@Field("name") String name, @Field("phone") String phone, @Field("gender") String gender,
@@ -44,19 +49,19 @@ public interface RetroInterface {
                                                 @Field("blood_group") String bloodGroup, @Field("hospital") String hospital,
                                                 @Field("division") String division, @Field("district") String district,
                                                 @Field("date") String date, @Field("need") String need,
-                                                @Field("phone") String phone);
+                                                @Field("phone") String phone,@Field("amountOfBloodNeeded") String amountOfBloodNeeded);
 
 
 
 
     @FormUrlEncoded
     @POST("searchDonor.php")
-    Call<ArrayList<UserDataModel>> findDonor(@Field("bloodGroup") String bloodgroup,@Field("district") String district,@Field("phone") String phone);
+    Call<ArrayList<UserDataModel>> findDonor(@Field("bloodGroup") String bloodgroup,@Field("district") String district,@Field("phone") String phone,@Field("userDistrict") String userDistrict,@Field("userDivision") String userDivision);
 
 
     @FormUrlEncoded
     @POST("searchPatients.php")
-    Call<ArrayList<PatientDataModel>> searchPatients(@Field("bloodGroup") String bloodGroup,@Field("district") String district,@Field("phone") String phone);
+    Call<ArrayList<PatientDataModel>> searchPatients(@Field("bloodGroup") String bloodGroup,@Field("district") String district,@Field("phone") String phone,@Field("userDistrict") String userDistrict,@Field("userDivision") String userDivision);
 
     @FormUrlEncoded
     @POST("dashBoardNumbers.php")
@@ -67,18 +72,23 @@ public interface RetroInterface {
     Call<DashBoardNumberModel> eligibilityCheck(@Field("phone") String phone);
 
     @FormUrlEncoded
+    @POST("changeEligibility.php")
+    Call<DashBoardNumberModel> eligibilityChange(@Field("phone") String phone, @Field("date") String date);
+
+
+    @FormUrlEncoded
     @POST("ownPatients.php")
     Call<ArrayList<PatientDataModel>> ownPatients(@Field("phone") String phone);
 
     @FormUrlEncoded
     @POST("updatePatientProfile.php")
-    Call<PatientDataModel> updatePatientProfile(@Field("name") String name, @Field("age") String age, @Field("blood_group") String bloodGroup, @Field("phone") String phone,
-
+    Call<PatientDataModel> updatePatientProfile(@Field("name") String name, @Field("age") String age, @Field("blood_group") String bloodGroup, @Field("need") String need,
+                                                @Field("phone") String phone,
 
                                                 @Field("newname") String newName, @Field("newage") String newaAge, @Field("newgender") String newGender,
-                                                @Field("newblood_group") String newBloodGroup, @Field("newhospital") String newHospital,
+                                                @Field("newhospital") String newHospital,
                                                 @Field("newdivision") String newDivision, @Field("newdistrict") String newDistrict,
-                                                @Field("newdate") String newDate, @Field("newneed") String newNeed);
+                                                @Field("newdate") String newDate, @Field("newAmountOfBlood") String newAmountOfBlood);
 
     @FormUrlEncoded
     @POST("deletePatientProfile.php")
@@ -97,23 +107,46 @@ public interface RetroInterface {
     @FormUrlEncoded
     @POST("sendRequest.php")
     Call<RequestDataModel> sendRequest( @Field("donorPhone") String donorPhone, @Field("patientName") String patientName,
-                                        @Field("patientAge") String patientAge, @Field("patientPhone") String patientPhone,
-                                        @Field("patientBloodGrp") String patientBloodGrp, @Field("requestedBy") String requester);
+                                        @Field("patientAge") String patientAge, @Field("patientBloodGrp") String patientBloodGrp,
+                                        @Field("patientDate") String patientDate, @Field("patientPhone") String patientPhone,
+                                        @Field("patientNeed") String patientNeed,
+                                        @Field("requestedBy") String requestedBy, @Field("operation") String operation);
+
+
+
+
+
 
     @FormUrlEncoded
-    @POST("checkDonorRequest.php") Call<ArrayList<PatientDataModel>> checkDonorRequest(@Field("phone") String userPhone,@Field("status") String status);
+    @POST("requestsFromDonorsAlpha.php")
+    Call<ArrayList<PatientDataModel>> requestsFromDonorsAlpha(@Field("phone") String phone, @Field("status") String status);
 
     @FormUrlEncoded
-    @POST("checkPatientRequest.php")
-    Call<ArrayList<UserDataModel>> checkPatientRequest(@Field("name") String name,@Field("age") String age,
-                                                 @Field("bloodGroup") String bloodgroup, @Field("phone") String phone);
+    @POST("requestsFromDonorsBeta.php")
+    Call<ArrayList<UserDataModel>> requestsFromDonorsBeta(@Field("name") String name,@Field("age") String age,
+                                                       @Field("bloodGroup") String bloodgroup, @Field("phone") String phone,
+                                                          @Field("status") String status);
 
     @FormUrlEncoded
-    @POST("checkDonorResponse.php")
-    Call<ArrayList<UserDataModel>> checkDonorResponse(@Field("name") String name,@Field("age") String age,
-                                                      @Field("bloodGroup") String bloodgroup, @Field("phone") String phone);
+    @POST("responsesFromDonorsAlpha.php")
+    Call<ArrayList<PatientDataModel>> responsesFromDonorsAlpha(@Field("phone") String phone, @Field("status") String status);
+
     @FormUrlEncoded
-    @POST("checkPatientResponse.php") Call<ArrayList<PatientDataModel>> checkPatientResponse(@Field("phone") String userPhone);
+    @POST("responsesFromDonorsBeta.php")
+    Call<ArrayList<UserDataModel>> responsesFromDonorsBeta(@Field("name") String name,@Field("age") String age,
+                                                      @Field("bloodGroup") String bloodgroup, @Field("phone") String phone,
+                                                           @Field("status") String status);
+
+    @FormUrlEncoded
+    @POST("requestsFromPatients.php") Call<ArrayList<PatientDataModel>> requestsFromPatients(@Field("phone") String phone, @Field("status") String status);
+
+
+
+    @FormUrlEncoded
+    @POST("responsesFromPatients.php") Call<ArrayList<PatientDataModel>> responsesFromPatients(@Field("phone") String phone, @Field("status") String status);
+
+
+
 
 
 
@@ -130,15 +163,30 @@ public interface RetroInterface {
     @POST("lookForRequests.php")
     Call<RequestDataModel> requestsOperation(@Field("donorPhone") String donorPhone, @Field("patientName") String patientName,
                                              @Field("patientAge") String patientAge, @Field("patientBloodGroup") String patientBloodGroup,
-                                             @Field("patientPhone") String phone,
-                                             @Field("requestedBy") String requestedBy, @Field("operation") String operation);
+                                             @Field("patientDate") String patientDate, @Field("patientPhone") String patientPhone,
+                                             @Field("patientNeed") String patientNeed, @Field("requestedBy") String requestedBy,
+                                             @Field("operation") String operation);
     @FormUrlEncoded
     @POST("tokenRegister.php")
     Call <UserDataModel> sendToken(@Field("phone") String phone, @Field("token") String token);
 
     @FormUrlEncoded
+    @POST("tokenDelete.php")
+    Call <UserDataModel> deleteToken(@Field("phone") String phone, @Field("token") String token);
+
+    @FormUrlEncoded
     @POST("pushNotification.php")
-    Call <UserDataModel> sendNotification(@Field("phone") String phone, @Field("title") String title, @Field("body") String body);
+    Call <UserDataModel> sendNotification(@Field("phone") String phone, @Field("title") String title, @Field("body") String body,
+                                          @Field("activity") String activity, @Field("hidden") String hidden);
+
+    @FormUrlEncoded
+    @POST("checkNotification.php")
+    Call <UserDataModel> checkNotification(@Field("phone") String phone);
+
+    @FormUrlEncoded
+    @POST("deleteNotification.php")
+    Call <UserDataModel> deleteNotification(@Field("phone") String phone);
+
 
     @FormUrlEncoded
     @POST("imageUpload.php")

@@ -44,9 +44,9 @@ public class PhoneVerificationActivity1 extends AppCompatActivity {
         Intent intent = getIntent();
         verification = intent.getStringExtra("verification");
 
-       if(verification.equals("forgotpass")){
-            getOtpBtn.setText("Next");
-            headerTextView.setText("Forgot Password");
+       if(verification.toLowerCase().equals("forgotpass")){
+            getOtpBtn.setText(R.string.next);
+            headerTextView.setText(R.string.forgot_password);
         }
 
         getOtpBtn.setOnClickListener(new View.OnClickListener() {
@@ -58,7 +58,7 @@ public class PhoneVerificationActivity1 extends AppCompatActivity {
 
                         checkUser();
                 } else {
-                    phoneInput.setError("Invalid Phone Number");
+                    phoneInput.setError(getResources().getString(R.string.phn_ver_activity_invalid_phone));
                     phoneInput.requestFocus();
                 }
             }
@@ -86,8 +86,8 @@ public class PhoneVerificationActivity1 extends AppCompatActivity {
             @Override
             public void onResponse(Call<UserDataModel> call, Response<UserDataModel> response) {
 
-                if(verification.equals("forgotpass")) {
-                    if (response.body().getServerMsg().equals("record exists")) {
+                if(verification.toLowerCase().equals("forgotpass")) {
+                    if (response.body().getServerMsg().toLowerCase().equals("record exists")) {
 
                         Intent intent = new Intent(PhoneVerificationActivity1.this, PhoneVerificationActivity2.class);
 
@@ -96,24 +96,24 @@ public class PhoneVerificationActivity1 extends AppCompatActivity {
                         startActivity(intent);
                         finish();
                     }
-                    else if(response.body().getServerMsg().equals("record doesn't exist")){
-                        ToastCreator.toastCreatorRed(PhoneVerificationActivity1.this, "This Phone number is not registered");
+                    else if(response.body().getServerMsg().toLowerCase().equals("record doesn't exist")){
+                        ToastCreator.toastCreatorRed(PhoneVerificationActivity1.this, getResources().getString(R.string.phn_ver_activity_not_registered));
                         Intent intent = new Intent(PhoneVerificationActivity1.this, LoginActivity.class);
                         startActivity(intent);
                         finish();
                     }
                     else {
-                        ToastCreator.toastCreatorRed(PhoneVerificationActivity1.this,  response.body().getServerMsg());
+                        ToastCreator.toastCreatorRed(PhoneVerificationActivity1.this,  getResources().getString(R.string.connection_failed_try_again));
                     }
                 }
 
 
-                else if(verification.equals("signup")){
-                    if (response.body().getServerMsg().equals("record exists")) {
-                        ToastCreator.toastCreatorRed(PhoneVerificationActivity1.this, "This phone number is  already registered");
+                else if(verification.toLowerCase().equals("signup")){
+                    if (response.body().getServerMsg().toLowerCase().equals("record exists")) {
+                        ToastCreator.toastCreatorRed(PhoneVerificationActivity1.this, getResources().getString(R.string.phn_ver_activity_already_registered));
 
                     }
-                    else if(response.body().getServerMsg().equals("record doesn't exist")){
+                    else if(response.body().getServerMsg().toLowerCase().equals("record doesn't exist")){
 
 
                         Intent nextIntent = new Intent(PhoneVerificationActivity1.this, PhoneVerificationActivity2.class);
@@ -124,7 +124,7 @@ public class PhoneVerificationActivity1 extends AppCompatActivity {
 
                     }
                     else {
-                        ToastCreator.toastCreatorRed(PhoneVerificationActivity1.this,  response.body().getServerMsg());
+                        ToastCreator.toastCreatorRed(PhoneVerificationActivity1.this,  getResources().getString(R.string.connection_failed_try_again));
                     }
 
 
@@ -136,7 +136,7 @@ public class PhoneVerificationActivity1 extends AppCompatActivity {
 
             @Override
             public void onFailure(Call<UserDataModel> call, Throwable t) {
-                ToastCreator.toastCreatorRed(PhoneVerificationActivity1.this, "An error occurred! Check your connection and try again");
+                ToastCreator.toastCreatorRed(PhoneVerificationActivity1.this, getResources().getString(R.string.connection_error));
             }
         });
 

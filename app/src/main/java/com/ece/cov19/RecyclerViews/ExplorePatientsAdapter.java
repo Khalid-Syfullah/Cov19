@@ -37,6 +37,7 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 import static android.content.Context.MODE_PRIVATE;
+import static com.ece.cov19.DataModels.LoggedInUserData.loggedInUserDonorInfo;
 import static com.ece.cov19.DataModels.LoggedInUserData.loggedInUserEligibility;
 import static com.ece.cov19.DataModels.LoggedInUserData.loggedInUserGender;
 
@@ -79,28 +80,52 @@ public class ExplorePatientsAdapter extends RecyclerView.Adapter<ExplorePatients
         }
         patientDataModel = patientDataModels.get(position);
 
-        downloadImage(patientDataModel.getPhone(), holder.patientImageView);
+        downloadImage(patientDataModel.getPhone(), holder.patientImageView, patientDataModel.getGender());
 
 
-
-        if((LoggedInUserData.loggedInUserDonorInfo.equals("Blood") || LoggedInUserData.loggedInUserDonorInfo.equals("Plasma"))&& loggedInUserEligibility.equals("eligible") && patientDataModel.getBloodGroup().equals(LoggedInUserData.loggedInUserBloodGroup)){
-            holder.donateTextView.setVisibility(View.VISIBLE);
-            holder.donateTextView.setText("Donate to Help");
+        String need=patientDataModel.getNeed();
+        if( loggedInUserEligibility.toLowerCase().equals("eligible") &&
+                patientDataModel.getBloodGroup().equals(LoggedInUserData.loggedInUserBloodGroup)) {
+            if (need.toLowerCase().equals("blood") && (loggedInUserDonorInfo.toLowerCase().equals("blood") ||
+                    loggedInUserDonorInfo.toLowerCase().equals("blood and plasma"))) {
+                holder.donateTextView.setVisibility(View.VISIBLE);
+                holder.donateTextView.setText(context.getResources().getString(R.string.donate_to_help));
+            } else if (need.toLowerCase().equals("plasma") && (loggedInUserDonorInfo.toLowerCase().equals("plasma") ||
+                    loggedInUserDonorInfo.toLowerCase().equals("blood and plasma"))) {
+                holder.donateTextView.setVisibility(View.VISIBLE);
+                holder.donateTextView.setText(context.getResources().getString(R.string.donate_to_help));
+            } else {
+                holder.donateTextView.setVisibility(View.VISIBLE);
+                holder.donateTextView.setText(R.string.view_profile);
+            }
         }
-        else
-        {
+        else {
             holder.donateTextView.setVisibility(View.VISIBLE);
-            holder.donateTextView.setText("View Profile");
+            holder.donateTextView.setText(R.string.view_profile);
         }
+//        if((LoggedInUserData.loggedInUserDonorInfo.toLowerCase().equals("blood") || LoggedInUserData.loggedInUserDonorInfo.toLowerCase().equals("plasma"))&& loggedInUserEligibility.toLowerCase().equals("eligible") && patientDataModel.getBloodGroup().equals(LoggedInUserData.loggedInUserBloodGroup)){
+//            holder.donateTextView.setVisibility(View.VISIBLE);
+//            holder.donateTextView.setText("Donate to Help");
+//        }
+//        else
+//        {
+//            holder.donateTextView.setVisibility(View.VISIBLE);
+//            holder.donateTextView.setText(R.string.view_profile);
+//        }
 
 
         holder.nameTextView.setText(patientDataModel.getName());
-        holder.typeTextView.setText(patientDataModel.getNeed());
+        if(patientDataModel.getNeed().equals("Blood")){
+            holder.typeTextView.setText(holder.itemView.getContext().getResources().getString(R.string.blood));
+        }
+        else if(patientDataModel.getNeed().equals("Plasma")){
+            holder.typeTextView.setText(holder.itemView.getContext().getResources().getString(R.string.plasma));
+        }
         holder.bloodTextView.setText(patientDataModel.getBloodGroup());
         holder.locationTextView.setText(patientDataModel.getHospital());
-        holder.dateTextView.setText(context.getResources().getString(R.string.adapter_Date)+"              "+patientDataModel.getDate());
+        holder.dateTextView.setText(context.getResources().getString(R.string.date_of_requirement)+"              "+patientDataModel.getDate());
 
-        if(patientDataModel.getGender().equals("male")) {
+        if(patientDataModel.getGender().toLowerCase().equals("male")) {
             holder.patientImageView.setImageResource(R.drawable.profile_icon_male);
         } else {
             holder.patientImageView.setImageResource(R.drawable.profile_icon_female);
@@ -183,24 +208,24 @@ public class ExplorePatientsAdapter extends RecyclerView.Adapter<ExplorePatients
 
 
 
-    private void downloadImage(String title, ImageView genderImageView) {
+    private void downloadImage(String title, ImageView genderImageView, String gender) {
         RetroInterface retroInterface = RetroInstance.getRetro();
         Call<ImageDataModel> incomingResponse = retroInterface.downloadImage(title);
         incomingResponse.enqueue(new Callback<ImageDataModel>() {
             @Override
             public void onResponse(Call<ImageDataModel> call, Response<ImageDataModel> response) {
 
-                if (response.body().getServerMsg().equals("true")) {
+                if (response.body().getServerMsg().toLowerCase().equals("true")) {
                     String image = response.body().getImage();
                     byte[] imageByte = Base64.decode(image, Base64.DEFAULT);
                     insertBitmap = BitmapFactory.decodeByteArray(imageByte, 0, imageByte.length);
                     insertBitmap = scaleImage(insertBitmap);
                     showImage(genderImageView, insertBitmap, R.drawable.profile_icon_male);
-                } else if (response.body().getServerMsg().equals("false")) {
+                } else if (response.body().getServerMsg().toLowerCase().equals("false")) {
 
-                    if (loggedInUserGender.toLowerCase().equals("male")) {
+                    if (gender.toLowerCase().toLowerCase().equals("male")) {
                         showDrawable(genderImageView, R.drawable.profile_icon_male);
-                    } else if (loggedInUserGender.toLowerCase().equals("female")) {
+                    } else if (gender.toLowerCase().toLowerCase().equals("female")) {
                         showDrawable(genderImageView, R.drawable.profile_icon_female);
                     }
                 }
@@ -209,12 +234,11 @@ public class ExplorePatientsAdapter extends RecyclerView.Adapter<ExplorePatients
 
             @Override
             public void onFailure(Call<ImageDataModel> call, Throwable t) {
-                ToastCreator.toastCreatorRed(context, "Profile Image retrieve failed. " + t.getMessage());
 
 
-                if (loggedInUserGender.toLowerCase().equals("male")) {
+                if (gender.toLowerCase().equals("male")) {
                     genderImageView.setImageResource(R.drawable.profile_icon_male);
-                } else if (loggedInUserGender.toLowerCase().equals("female")) {
+                } else if (gender.toLowerCase().equals("female")) {
                     genderImageView.setImageResource(R.drawable.profile_icon_female);
                 }
             }

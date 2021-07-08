@@ -10,12 +10,13 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.ece.cov19.DataModels.PatientDataModel;
+import com.ece.cov19.Functions.ClickTimeChecker;
 import com.ece.cov19.R;
 import com.ece.cov19.ViewPatientProfileActivity;
 
 import java.util.ArrayList;
 
-public class DonorRequestsViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+public class RequestsFromPatientsViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
     TextView nameTextView, typeTextView, bloodTextView, locationTextView, acceptButton, declineButton, dateTextView;
     ImageView patientImageView;
@@ -23,7 +24,7 @@ public class DonorRequestsViewHolder extends RecyclerView.ViewHolder implements 
     ArrayList<PatientDataModel> patientDataModels;
     int pos;
 
-    public DonorRequestsViewHolder(@NonNull View itemView, ArrayList<PatientDataModel> patientDataModels) {
+    public RequestsFromPatientsViewHolder(@NonNull View itemView, ArrayList<PatientDataModel> patientDataModels) {
         super(itemView);
         this.patientDataModels = patientDataModels;
 
@@ -37,7 +38,7 @@ public class DonorRequestsViewHolder extends RecyclerView.ViewHolder implements 
         dateTextView = itemView.findViewById(R.id.request_patient_date);
 
         acceptButton.setVisibility(View.VISIBLE);
-        acceptButton.setText("View Profile");
+        acceptButton.setText(R.string.view_profile);
         declineButton.setVisibility(View.GONE);
 
         acceptButton.setOnClickListener(this);
@@ -46,30 +47,31 @@ public class DonorRequestsViewHolder extends RecyclerView.ViewHolder implements 
 
     @Override
     public void onClick(View view) {
+if(ClickTimeChecker.clickTimeChecker()) {
+    Context c = view.getContext();
+    pos = getAdapterPosition();
+    patientDataModel = patientDataModels.get(pos);
 
-                Context c = view.getContext();
-                pos = getAdapterPosition();
-                patientDataModel = patientDataModels.get(pos);
 
+    Intent intent = new Intent(view.getContext(), ViewPatientProfileActivity.class);
+    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
-                Intent intent = new Intent(view.getContext(), ViewPatientProfileActivity.class);
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+    intent.putExtra("name", patientDataModel.getName());
+    intent.putExtra("age", patientDataModel.getAge());
+    intent.putExtra("gender", patientDataModel.getGender());
+    intent.putExtra("blood_group", patientDataModel.getBloodGroup());
+    intent.putExtra("hospital", patientDataModel.getHospital());
+    intent.putExtra("division", patientDataModel.getDivision());
+    intent.putExtra("district", patientDataModel.getDistrict());
+    intent.putExtra("date", patientDataModel.getDate());
+    intent.putExtra("need", patientDataModel.getNeed());
+    intent.putExtra("phone", patientDataModel.getPhone());
+    intent.putExtra("amountOfBloodNeeded",patientDataModel.getAmountOfBloodNeeded());
+    intent.putExtra("activity", "RequestsFromPatientsActivity");
 
-                intent.putExtra("name", patientDataModel.getName());
-                intent.putExtra("age", patientDataModel.getAge());
-                intent.putExtra("gender", patientDataModel.getGender());
-                intent.putExtra("blood_group", patientDataModel.getBloodGroup());
-                intent.putExtra("hospital", patientDataModel.getHospital());
-                intent.putExtra("division", patientDataModel.getDivision());
-                intent.putExtra("district", patientDataModel.getDistrict());
-                intent.putExtra("date", patientDataModel.getDate());
-                intent.putExtra("need", patientDataModel.getNeed());
-                intent.putExtra("phone", patientDataModel.getPhone());
-                intent.putExtra("activity","DonorRequestsActivity");
-
-                c.startActivity(intent);
-                //((DonorRequestsActivity)c).finish();
-
+    c.startActivity(intent);
+    //((RequestsFromPatientsActivity)c).finish();
+}
     }
 
 

@@ -55,11 +55,13 @@ public class UpdatePasswordActivity extends AppCompatActivity {
         updatePassBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                updatePassBtn.setEnabled(false);
                 password=passwordEditText.getText().toString();
 
                 if (password.length() < 6) {
 
-                    ToastCreator.toastCreatorRed(UpdatePasswordActivity.this,"password must be of at least 6 characters");
+                    ToastCreator.toastCreatorRed(UpdatePasswordActivity.this,getResources().getString(R.string.reg_activity_password_length));
+                    updatePassBtn.setEnabled(true);
                 }
                 else {
                     if(password.equals(confPasswordEditText.getText().toString())){
@@ -67,7 +69,8 @@ public class UpdatePasswordActivity extends AppCompatActivity {
                     }
                     else {
 
-                        ToastCreator.toastCreatorRed(UpdatePasswordActivity.this,"Passwords don't match");
+                        ToastCreator.toastCreatorRed(UpdatePasswordActivity.this,getResources().getString(R.string.reg_activity_password_no_match));
+                        updatePassBtn.setEnabled(true);
                     }
                 }
             }
@@ -82,9 +85,10 @@ public class UpdatePasswordActivity extends AppCompatActivity {
         updatePass.enqueue(new Callback<UserDataModel>() {
             @Override
             public void onResponse(Call<UserDataModel> call, Response<UserDataModel> response) {
+                updatePassBtn.setEnabled(true);
                 String serverMsg = response.body().getServerMsg();
-                if(serverMsg.equals("Success")){
-                    ToastCreator.toastCreatorGreen(UpdatePasswordActivity.this,"Password Updated");
+                if(serverMsg.toLowerCase().equals("success")){
+                    ToastCreator.toastCreatorGreen(UpdatePasswordActivity.this,getResources().getString(R.string.update_password_update_success));
 
 //                    clearing Shared Prefs
                     SharedPreferences sharedPreferences=getSharedPreferences(LOGIN_SHARED_PREFS,MODE_PRIVATE);
@@ -98,8 +102,8 @@ public class UpdatePasswordActivity extends AppCompatActivity {
 
             @Override
             public void onFailure(Call<UserDataModel> call, Throwable t) {
-                ToastCreator.toastCreatorRed(UpdatePasswordActivity.this,"Couldn't Update Password! Check your Connection and try again");
-
+                ToastCreator.toastCreatorRed(UpdatePasswordActivity.this,getResources().getString(R.string.update_password_update_failed));
+                updatePassBtn.setEnabled(true);
             }
         });
 

@@ -5,6 +5,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -18,6 +19,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.ece.cov19.DataModels.PatientDataModel;
+import com.ece.cov19.Functions.LoginUser;
 import com.ece.cov19.Functions.ToastCreator;
 import com.ece.cov19.RecyclerViews.ExplorePatientsAdapter;
 import com.ece.cov19.RetroServices.RetroInstance;
@@ -31,10 +33,17 @@ import retrofit2.Response;
 
 import static com.ece.cov19.DataModels.FindPatientData.findPatientAge;
 import static com.ece.cov19.DataModels.FindPatientData.findPatientBloodGroup;
+import static com.ece.cov19.DataModels.FindPatientData.findPatientDistrict;
+import static com.ece.cov19.DataModels.FindPatientData.findPatientDivision;
 import static com.ece.cov19.DataModels.FindPatientData.findPatientName;
 import static com.ece.cov19.DataModels.FindPatientData.findPatientNeed;
 import static com.ece.cov19.DataModels.FindPatientData.findPatientPhone;
+import static com.ece.cov19.DataModels.LoggedInUserData.loggedInUserDistrict;
+import static com.ece.cov19.DataModels.LoggedInUserData.loggedInUserDivision;
 import static com.ece.cov19.DataModels.LoggedInUserData.loggedInUserPhone;
+import static com.ece.cov19.LoginActivity.LOGIN_SHARED_PREFS;
+import static com.ece.cov19.LoginActivity.LOGIN_USER_PASS;
+import static com.ece.cov19.LoginActivity.LOGIN_USER_PHONE;
 
 public class ExplorePatientsActivity extends AppCompatActivity {
 
@@ -56,6 +65,8 @@ public class ExplorePatientsActivity extends AppCompatActivity {
         findPatientAge="";
         findPatientPhone="";
         findPatientBloodGroup="any";
+        findPatientDistrict="";
+        findPatientDivision="";
         findPatientNeed="";
 
         explorePatientsTextView =findViewById(R.id.explore_patients_textview);
@@ -77,6 +88,7 @@ public class ExplorePatientsActivity extends AppCompatActivity {
         bloodgrpSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                bloodgrpSpinner.setEnabled(false);
                 allPatientsSearch();
             }
 
@@ -116,7 +128,23 @@ public class ExplorePatientsActivity extends AppCompatActivity {
         findPatientPhone="";
         findPatientBloodGroup="any";
         findPatientNeed="";
+        if(LoginUser.checkLoginStat().equals("failed")){
+            SharedPreferences sharedPreferences = getSharedPreferences(LOGIN_SHARED_PREFS, MODE_PRIVATE);
+            String phone,password;
 
+            if (sharedPreferences.contains(LOGIN_USER_PHONE) && sharedPreferences.contains(LOGIN_USER_PASS)) {
+                phone = sharedPreferences.getString(LOGIN_USER_PHONE, "");
+                password= sharedPreferences.getString(LOGIN_USER_PASS, "");
+
+                LoginUser.loginUser(this,phone,password,ExplorePatientsActivity.class);
+            }
+            else {
+                ToastCreator.toastCreatorRed(this,getString(R.string.login_failed));
+                Intent intent=new Intent(this,LoginActivity.class);
+                startActivity(intent);
+                finish();
+            }
+        }
         explorePatientsTextView =findViewById(R.id.explore_patients_textview);
         explorePatientsRecyclerView = findViewById(R.id.explore_patients_recyclerview);
         bloodgrpSpinner=findViewById(R.id.explore_patients_bld_grp);
@@ -136,6 +164,7 @@ public class ExplorePatientsActivity extends AppCompatActivity {
         bloodgrpSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                bloodgrpSpinner.setEnabled(false);
                 allPatientsSearch();
             }
 
@@ -190,13 +219,12 @@ public class ExplorePatientsActivity extends AppCompatActivity {
 
         patientDataModels.clear();
         RetroInterface retroInterface = RetroInstance.getRetro();
-        Call<ArrayList<PatientDataModel>> searchDonor = retroInterface.searchPatients(bloodgroup,district,loggedInUserPhone);
+        Call<ArrayList<PatientDataModel>> searchDonor = retroInterface.searchPatients(bloodgroup,district,loggedInUserPhone,loggedInUserDistrict,loggedInUserDivision);
         searchDonor.enqueue(new Callback<ArrayList<PatientDataModel>>() {
             @Override
             public void onResponse(Call<ArrayList<PatientDataModel>> call, Response<ArrayList<PatientDataModel>> response) {
                 progressBar.setVisibility(View.GONE);
-
-
+                bloodgrpSpinner.setEnabled(true);
 
                 if(response.isSuccessful()){
                     ArrayList<PatientDataModel> initialModels = response.body();
@@ -204,10 +232,13 @@ public class ExplorePatientsActivity extends AppCompatActivity {
                     if(initialModels.size() == 0){
                         noRecordTextView.setVisibility(View.VISIBLE);
                     }
-                    for(PatientDataModel initialDataModel : initialModels){
+                    else {
+                        noRecordTextView.setVisibility(View.GONE);
+                        for (PatientDataModel initialDataModel : initialModels) {
 
-                        patientDataModels.add(initialDataModel);
+                            patientDataModels.add(initialDataModel);
 
+                        }
                     }
 
 
@@ -218,15 +249,17 @@ public class ExplorePatientsActivity extends AppCompatActivity {
                 }
 
                 else{
-                    ToastCreator.toastCreatorRed(ExplorePatientsActivity.this,"No Response");
+                    progressBar.setVisibility(View.GONE);
+                    ToastCreator.toastCreatorRed(ExplorePatientsActivity.this,getResources().getString(R.string.connection_failed_try_again));
 
                 }
             }
 
             @Override
             public void onFailure(Call<ArrayList<PatientDataModel>> call, Throwable t) {
-
-                ToastCreator.toastCreatorRed(ExplorePatientsActivity.this,"Error : " +t.getMessage());
+                progressBar.setVisibility(View.GONE);
+                bloodgrpSpinner.setEnabled(true);
+                ToastCreator.toastCreatorRed(ExplorePatientsActivity.this,getResources().getString(R.string.connection_error));
             }
         });
     }

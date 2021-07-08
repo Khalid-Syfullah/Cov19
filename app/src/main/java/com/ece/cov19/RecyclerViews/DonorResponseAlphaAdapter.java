@@ -25,7 +25,9 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.ece.cov19.DataModels.FindPatientData;
 import com.ece.cov19.DataModels.ImageDataModel;
 import com.ece.cov19.DataModels.PatientDataModel;
+import com.ece.cov19.DataModels.RequestDataModel;
 import com.ece.cov19.DataModels.UserDataModel;
+import com.ece.cov19.DonorResponseActivity;
 import com.ece.cov19.Functions.ToastCreator;
 import com.ece.cov19.R;
 import com.ece.cov19.RetroServices.RetroInstance;
@@ -40,13 +42,14 @@ import retrofit2.Response;
 
 import static android.content.Context.MODE_PRIVATE;
 import static com.ece.cov19.DataModels.LoggedInUserData.loggedInUserGender;
+import static com.ece.cov19.DataModels.LoggedInUserData.loggedInUserPhone;
 
 public class DonorResponseAlphaAdapter extends RecyclerView.Adapter<DonorResponseAlphaViewHolder> {
 
     public Context context;
     public PatientDataModel patientDataModel;
     public ArrayList<PatientDataModel> patientDataModels;
-
+    public String status;
     public static final String Language_pref="Language";
     public static final String Selected_language="Selected Language";
     SharedPreferences langPrefs;
@@ -54,9 +57,10 @@ public class DonorResponseAlphaAdapter extends RecyclerView.Adapter<DonorRespons
     Bitmap insertBitmap;
     Uri imageUri;
 
-    public DonorResponseAlphaAdapter(Context context, ArrayList<PatientDataModel> patientDataModels) {
+    public DonorResponseAlphaAdapter(Context context, ArrayList<PatientDataModel> patientDataModels , String status) {
         this.context = context;
         this.patientDataModels = patientDataModels;
+        this.status = status;
     }
 
     @NonNull
@@ -65,7 +69,8 @@ public class DonorResponseAlphaAdapter extends RecyclerView.Adapter<DonorRespons
 
         LayoutInflater layoutInflater = LayoutInflater.from(context);
         View view = layoutInflater.inflate(R.layout.seeking_help_child, parent, false);
-        DonorResponseAlphaViewHolder donorResponseAlphaViewHolder = new DonorResponseAlphaViewHolder(view, patientDataModels);
+        DonorResponseAlphaViewHolder donorResponseAlphaViewHolder = new DonorResponseAlphaViewHolder(view, patientDataModels, status);
+
         return donorResponseAlphaViewHolder;
     }
 
@@ -79,22 +84,29 @@ public class DonorResponseAlphaAdapter extends RecyclerView.Adapter<DonorRespons
         }
         patientDataModel = patientDataModels.get(position);
 
-        holder.donateTextView.setVisibility(View.VISIBLE);
-        holder.donateTextView.setText("Show Response");
 
-        downloadImage(patientDataModel.getPhone(), holder.patientImageView);
+        holder.donateTextView.setVisibility(View.VISIBLE);
+        holder.donateTextView.setText(R.string.show_response);
+
+        downloadImage(patientDataModel.getPhone(), holder.patientImageView, patientDataModel.getGender());
 
 
         holder.nameTextView.setText(patientDataModel.getName());
-        holder.typeTextView.setText(patientDataModel.getNeed());
+        if(patientDataModel.getNeed().equals("Blood")){
+            holder.typeTextView.setText(holder.itemView.getContext().getResources().getString(R.string.blood));
+        }
+        else if(patientDataModel.getNeed().equals("Plasma")){
+            holder.typeTextView.setText(holder.itemView.getContext().getResources().getString(R.string.plasma));
+        }
         holder.bloodTextView.setText(patientDataModel.getBloodGroup());
         holder.locationTextView.setText(patientDataModel.getHospital());
-        holder.dateTextView.setText(context.getResources().getString(R.string.adapter_Date)+"              "+patientDataModel.getDate());
-        if(patientDataModel.getGender().equals("male")) {
+        holder.dateTextView.setText(context.getResources().getString(R.string.date_of_requirement)+"              "+patientDataModel.getDate());
+        if(patientDataModel.getGender().toLowerCase().equals("male")) {
             holder.patientImageView.setImageResource(R.drawable.profile_icon_male);
         } else {
             holder.patientImageView.setImageResource(R.drawable.profile_icon_female);
         }
+
 
 
     }
@@ -172,24 +184,24 @@ public class DonorResponseAlphaAdapter extends RecyclerView.Adapter<DonorRespons
 
 
 
-    private void downloadImage(String title, ImageView genderImageView) {
+    private void downloadImage(String title, ImageView genderImageView, String gender) {
         RetroInterface retroInterface = RetroInstance.getRetro();
         Call<ImageDataModel> incomingResponse = retroInterface.downloadImage(title);
         incomingResponse.enqueue(new Callback<ImageDataModel>() {
             @Override
             public void onResponse(Call<ImageDataModel> call, Response<ImageDataModel> response) {
 
-                if (response.body().getServerMsg().equals("true")) {
+                if (response.body().getServerMsg().toLowerCase().equals("true")) {
                     String image = response.body().getImage();
                     byte[] imageByte = Base64.decode(image, Base64.DEFAULT);
                     insertBitmap = BitmapFactory.decodeByteArray(imageByte, 0, imageByte.length);
                     insertBitmap = scaleImage(insertBitmap);
                     showImage(genderImageView, insertBitmap, R.drawable.profile_icon_male);
-                } else if (response.body().getServerMsg().equals("false")) {
+                } else if (response.body().getServerMsg().toLowerCase().equals("false")) {
 
-                    if (loggedInUserGender.toLowerCase().equals("male")) {
+                    if (gender.toLowerCase().toLowerCase().equals("male")) {
                         showDrawable(genderImageView, R.drawable.profile_icon_male);
-                    } else if (loggedInUserGender.toLowerCase().equals("female")) {
+                    } else if (gender.toLowerCase().toLowerCase().equals("female")) {
                         showDrawable(genderImageView, R.drawable.profile_icon_female);
                     }
                 }
@@ -198,12 +210,11 @@ public class DonorResponseAlphaAdapter extends RecyclerView.Adapter<DonorRespons
 
             @Override
             public void onFailure(Call<ImageDataModel> call, Throwable t) {
-                ToastCreator.toastCreatorRed(context, "Profile Image retrieve failed. " + t.getMessage());
 
 
-                if (loggedInUserGender.toLowerCase().equals("male")) {
+                if (gender.toLowerCase().equals("male")) {
                     genderImageView.setImageResource(R.drawable.profile_icon_male);
-                } else if (loggedInUserGender.toLowerCase().equals("female")) {
+                } else if (gender.toLowerCase().equals("female")) {
                     genderImageView.setImageResource(R.drawable.profile_icon_female);
                 }
             }

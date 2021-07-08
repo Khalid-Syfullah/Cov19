@@ -1,6 +1,7 @@
 package com.ece.cov19;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -18,6 +19,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.ece.cov19.DataModels.UserDataModel;
+import com.ece.cov19.Functions.LoginUser;
 import com.ece.cov19.Functions.ToastCreator;
 import com.ece.cov19.RecyclerViews.SearchDonorAdapter;
 import com.ece.cov19.RetroServices.RetroInstance;
@@ -31,9 +33,17 @@ import retrofit2.Response;
 
 import static com.ece.cov19.DataModels.FindPatientData.findPatientAge;
 import static com.ece.cov19.DataModels.FindPatientData.findPatientBloodGroup;
+import static com.ece.cov19.DataModels.FindPatientData.findPatientDistrict;
+import static com.ece.cov19.DataModels.FindPatientData.findPatientDivision;
 import static com.ece.cov19.DataModels.FindPatientData.findPatientName;
+import static com.ece.cov19.DataModels.FindPatientData.findPatientNeed;
 import static com.ece.cov19.DataModels.FindPatientData.findPatientPhone;
+import static com.ece.cov19.DataModels.LoggedInUserData.loggedInUserDistrict;
+import static com.ece.cov19.DataModels.LoggedInUserData.loggedInUserDivision;
 import static com.ece.cov19.DataModels.LoggedInUserData.loggedInUserPhone;
+import static com.ece.cov19.LoginActivity.LOGIN_SHARED_PREFS;
+import static com.ece.cov19.LoginActivity.LOGIN_USER_PASS;
+import static com.ece.cov19.LoginActivity.LOGIN_USER_PHONE;
 
 public class SearchDonorActivity extends AppCompatActivity {
 
@@ -82,6 +92,7 @@ public class SearchDonorActivity extends AppCompatActivity {
         bloodgrpSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                bloodgrpSpinner.setEnabled(false);
                 donorSearch();
             }
 
@@ -129,6 +140,26 @@ public class SearchDonorActivity extends AppCompatActivity {
         findPatientAge="";
         findPatientPhone="";
         findPatientBloodGroup="any";
+        findPatientDistrict="";
+        findPatientDivision="";
+        findPatientNeed="";
+        if(LoginUser.checkLoginStat().equals("failed")){
+            SharedPreferences sharedPreferences = getSharedPreferences(LOGIN_SHARED_PREFS, MODE_PRIVATE);
+            String phone,password;
+
+            if (sharedPreferences.contains(LOGIN_USER_PHONE) && sharedPreferences.contains(LOGIN_USER_PASS)) {
+                phone = sharedPreferences.getString(LOGIN_USER_PHONE, "");
+                password= sharedPreferences.getString(LOGIN_USER_PASS, "");
+
+                LoginUser.loginUser(this,phone,password,SearchDonorActivity.class);
+            }
+            else {
+                ToastCreator.toastCreatorRed(this,getString(R.string.login_failed));
+                Intent intent=new Intent(this,LoginActivity.class);
+                startActivity(intent);
+                finish();
+            }
+        }
 
         backbtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -143,6 +174,7 @@ public class SearchDonorActivity extends AppCompatActivity {
         bloodgrpSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                bloodgrpSpinner.setEnabled(false);
                 donorSearch();
             }
 
@@ -192,24 +224,27 @@ public class SearchDonorActivity extends AppCompatActivity {
 
 
         RetroInterface retroInterface = RetroInstance.getRetro();
-        Call<ArrayList<UserDataModel>> searchDonor = retroInterface.findDonor(bloodgroup, district, loggedInUserPhone);
+        Call<ArrayList<UserDataModel>> searchDonor = retroInterface.findDonor(bloodgroup, district, loggedInUserPhone,loggedInUserDistrict,loggedInUserDivision);
         searchDonor.enqueue(new Callback<ArrayList<UserDataModel>>() {
             @Override
             public void onResponse(Call<ArrayList<UserDataModel>> call, Response<ArrayList<UserDataModel>> response) {
+                bloodgrpSpinner.setEnabled(true);
                 progressBar.setVisibility(View.GONE);
                 if (response.isSuccessful()) {
                     ArrayList<UserDataModel> initialModels = response.body();
-                    if (initialModels.size() == 0) {
-                        filterResult.setText(filterResultText + " (" + initialModels.size() + ")");
-                        noRecordTextView.setVisibility(View.VISIBLE);
-                    } else {
-                        filterResult.setText(filterResultText + " (" + initialModels.size() + ")");
-                    }
+
 
                     for (UserDataModel initialDataModel : initialModels) {
-                        if (initialDataModel.getDonor().equals("Blood") || initialDataModel.getDonor().equals("Plasma")) {
+                        if (initialDataModel.getDonor().toLowerCase().equals("blood") || initialDataModel.getDonor().toLowerCase().equals("plasma")|| initialDataModel.getDonor().toLowerCase().equals("blood and plasma")) {
                             userDataModels.add(initialDataModel);
                         }
+                    }
+                    if (initialModels.size() == 0) {
+                        filterResult.setText(filterResultText + " (" + userDataModels.size() + ")");
+                        noRecordTextView.setVisibility(View.VISIBLE);
+                    } else {
+                        filterResult.setText(filterResultText + " (" + userDataModels.size() + ")");
+                        noRecordTextView.setVisibility(View.GONE);
                     }
 
                     searchDonorAdapter = new SearchDonorAdapter(getApplicationContext(), userDataModels);
@@ -218,15 +253,17 @@ public class SearchDonorActivity extends AppCompatActivity {
                     LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getApplicationContext());
                     recyclerView.setLayoutManager(linearLayoutManager);
                 } else {
-
-                    ToastCreator.toastCreatorRed(SearchDonorActivity.this,"No Response from Server");
+                    progressBar.setVisibility(View.GONE);
+                    ToastCreator.toastCreatorRed(SearchDonorActivity.this,getResources().getString(R.string.connection_failed_try_again));
 
                 }
             }
 
             @Override
             public void onFailure(Call<ArrayList<UserDataModel>> call, Throwable t) {
-                ToastCreator.toastCreatorRed(SearchDonorActivity.this,"Error: " + t.getMessage());
+                progressBar.setVisibility(View.GONE);
+                bloodgrpSpinner.setEnabled(true);
+                ToastCreator.toastCreatorRed(SearchDonorActivity.this,getResources().getString(R.string.connection_error));
             }
         });
     }

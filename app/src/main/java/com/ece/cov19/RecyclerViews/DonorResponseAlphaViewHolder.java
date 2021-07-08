@@ -32,12 +32,16 @@ public class DonorResponseAlphaViewHolder extends RecyclerView.ViewHolder implem
     RecyclerView requestDonorRecyclerView;
     PatientDataModel patientDataModel;
     ArrayList<PatientDataModel> patientDataModels;
+    String status;
+
     int pos;
     boolean visibility = true;
 
-    public DonorResponseAlphaViewHolder(@NonNull View itemView, ArrayList<PatientDataModel> patientDataModels) {
+
+    public DonorResponseAlphaViewHolder(@NonNull View itemView, ArrayList<PatientDataModel> patientDataModels, String status) {
         super(itemView);
         this.patientDataModels = patientDataModels;
+        this.status = status;
 
         nameTextView = itemView.findViewById(R.id.seeking_help_name);
         donateTextView = itemView.findViewById(R.id.seeking_help_donate_btn);
@@ -60,6 +64,8 @@ public class DonorResponseAlphaViewHolder extends RecyclerView.ViewHolder implem
     @Override
     public void onClick(View view) {
 
+
+
         if(visibility == true){
            // ToastCreator.toastCreator(view.getContext(),"Pressed",Toast.LENGTH_SHORT).show();
             visibility = false;
@@ -71,7 +77,10 @@ public class DonorResponseAlphaViewHolder extends RecyclerView.ViewHolder implem
             FindPatientData.findPatientBloodGroup = patientDataModels.get(pos).getBloodGroup();
             FindPatientData.findPatientName=patientDataModels.get(pos).getName();
             FindPatientData.findPatientAge=patientDataModels.get(pos).getAge();
+            FindPatientData.findPatientDate=patientDataModels.get(pos).getDate();
             FindPatientData.findPatientPhone=patientDataModels.get(pos).getPhone();
+            FindPatientData.findPatientNeed=patientDataModels.get(pos).getNeed();
+
 
             UserDataModel userDataModel;
             ArrayList<UserDataModel> userDataModels;
@@ -79,8 +88,7 @@ public class DonorResponseAlphaViewHolder extends RecyclerView.ViewHolder implem
 
             progressBar.setVisibility(View.VISIBLE);
             RetroInterface retroInterface = RetroInstance.getRetro();
-            Call<ArrayList<UserDataModel>> incomingResponse = retroInterface.checkDonorResponse(patientDataModel.getName(),patientDataModel.getAge(),patientDataModel.getBloodGroup(),patientDataModel.getPhone());
-            //ToastCreator.toastCreator(view.getContext(), patientDataModel.getName()+patientDataModel.getAge()+patientDataModel.getBloodGroup()+patientDataModel.getPhone(), Toast.LENGTH_SHORT).show();
+            Call<ArrayList<UserDataModel>> incomingResponse = retroInterface.responsesFromDonorsBeta(patientDataModel.getName(),patientDataModel.getAge(),patientDataModel.getBloodGroup(),patientDataModel.getPhone(),status);
             incomingResponse.enqueue(new Callback<ArrayList<UserDataModel>>() {
                 @Override
                 public void onResponse(Call<ArrayList<UserDataModel>> call, Response<ArrayList<UserDataModel>> response) {
@@ -94,7 +102,7 @@ public class DonorResponseAlphaViewHolder extends RecyclerView.ViewHolder implem
                             userDataModels.add(initialDataModel);
 
                         }
-                        donateTextView.setText("Hide Response");
+                        donateTextView.setText(R.string.hide_response);
                         //donateTextView.setBackgroundColor(R.drawable.button_style_colored);
                         requestDonorRecyclerView.setVisibility(View.VISIBLE);
                         DonorResponseBetaAdapter donorResponseBetaAdapter = new DonorResponseBetaAdapter(itemView.getContext(), userDataModels);
@@ -103,8 +111,7 @@ public class DonorResponseAlphaViewHolder extends RecyclerView.ViewHolder implem
                         requestDonorRecyclerView.setLayoutManager(linearLayoutManager);
                     } else {
                         progressBar.setVisibility(View.GONE);
-                        donateTextView.setText("No Request");
-                        ToastCreator.toastCreatorRed(view.getContext(),"No data");
+                        donateTextView.setText(R.string.no_response_found);
                     }
 
 
@@ -113,16 +120,15 @@ public class DonorResponseAlphaViewHolder extends RecyclerView.ViewHolder implem
                 @Override
                 public void onFailure(Call<ArrayList<UserDataModel>> call, Throwable t) {
                     progressBar.setVisibility(View.GONE);
-                    donateTextView.setText("No Request");
-                    //ToastCreator.toastCreator(view.getContext(),"Error: "+t.getMessage(),Toast.LENGTH_LONG).show();
+                    donateTextView.setText(R.string.no_requests_found);
                 }
             });
 
         }
         else{
-            //ToastCreator.toastCreator(view.getContext(),"Pressed again",Toast.LENGTH_SHORT).show();
+
             visibility = true;
-            donateTextView.setText("Show Response");
+            donateTextView.setText(R.string.show_response);
             //donateTextView.setBackgroundColor(R.drawable.button_style_green);
             requestDonorRecyclerView.setVisibility(View.GONE);
         }

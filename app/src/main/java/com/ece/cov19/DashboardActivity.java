@@ -10,7 +10,6 @@ import androidx.drawerlayout.widget.DrawerLayout;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
-import android.content.ActivityNotFoundException;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -18,30 +17,36 @@ import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Base64;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.ece.cov19.DataModels.DashBoardNumberModel;
 import com.ece.cov19.DataModels.ImageDataModel;
 import com.ece.cov19.DataModels.LoggedInUserData;
 import com.ece.cov19.DataModels.UserDataModel;
+import com.ece.cov19.Functions.ClickTimeChecker;
+import com.ece.cov19.Functions.LoginUser;
 import com.ece.cov19.Functions.ToastCreator;
 import com.ece.cov19.RetroServices.RetroInstance;
 import com.ece.cov19.RetroServices.RetroInterface;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.navigation.NavigationView;
+import com.google.android.play.core.review.ReviewInfo;
+import com.google.android.play.core.review.ReviewManager;
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.iid.InstanceIdResult;
 
@@ -52,41 +57,43 @@ import retrofit2.Callback;
 import retrofit2.Response;
 import static android.content.ContentValues.TAG;
 
+import static com.ece.cov19.DataModels.LoggedInUserData.loggedInUserDonorInfo;
 import static com.ece.cov19.DataModels.LoggedInUserData.loggedInUserEligibility;
 import static com.ece.cov19.DataModels.LoggedInUserData.loggedInUserGender;
-import static com.ece.cov19.DataModels.LoggedInUserData.loggedInUserName;
 import static com.ece.cov19.DataModels.LoggedInUserData.loggedInUserPhone;
+import static com.ece.cov19.LoginActivity.LOGIN_SHARED_PREFS;
+import static com.ece.cov19.LoginActivity.LOGIN_USER_PASS;
+import static com.ece.cov19.LoginActivity.LOGIN_USER_PHONE;
 import static com.ece.cov19.SplashActivity.Language_pref;
 import static com.ece.cov19.SplashActivity.Selected_language;
 
 
 public class DashboardActivity extends AppCompatActivity implements View.OnClickListener, NavigationView.OnNavigationItemSelectedListener{
-    private String[] nameSplit;
+
     private CardView findDonorCardView, addPatientCardView, requestsCardView, responsesCardView, fromDonorsCardView,
-            fromPatientsCardView, exploreCardView, myPatientsCardView, allDonorsCardView, allPatientsCardView;
-    private TextView findDonorText, addPatientText, requestsText, responsesText,fromDonorsText,fromPatientsText, exploreText,
-            myPatientsText,allDonorsText,allPatientsText;
-    private ImageView dashboardDrawerBtn, dashboardGenderIcon, findDonorImage, addPatientImage, requestsImage, responsesImage,fromDonorsImage,fromPatientsImage, exploreImage,
-            myPatientsImage,allDonorsImage,allPatientsImage;
-    private TextView dashboard, numberOfPatients,numberOfDonors,numberOfPatientsText,numberOfDonorsText,numberOfRequestsFromDonors,
-            numberOfRequestsFromPatients,numberOfRequestsFromDonorsText,numberOfRequestsFromPatientsText;
+            fromPatientsCardView, exploreCardView, myPatientsCardView, allDonorsCardView, allPatientsCardView,
+            exploreCCardView, exploreDCardView, exploreECardView, exploreFCardView;
 
+    private ImageView dashboardDrawerBtn, dashboardGenderIcon;
+    private TextView dashboard, numberOfPatients,numberOfDonors,numberOfRequestsFromDonors,
+            numberOfRequestsFromPatients,numberOfRequestsFromDonorsText,numberOfRequestsFromPatientsText, exploreCText, exploreDText,
+            exploreEText, exploreFText;
 
-    private ProgressBar progressBar;
     private ConstraintLayout loadingView;
 
     private DrawerLayout drawerLayout;
     private NavigationView navigationView;
+    private ReviewInfo reviewInfo;
+    private ReviewManager manager;
+
+    private Button xRay;
 
     public int backCounter;
     public int requestResponseSwitcher;
     public int requestResponseCardViewSwitcher;
     public int exploreSwitcher;
 
-
-
-
-    private String noOfDonors, noOfPatients, noOfRequests, noOfResponses;
+    private String noOfDonors, noOfPatients, noOfRequestsFromDonors, noOfRequestsFromPatients, noOfResponsesFromDonors, noOfResponsesFromPatients, nameOfActivity;
 
     Bitmap insertBitmap;
     Uri imageUri;
@@ -97,11 +104,12 @@ public class DashboardActivity extends AppCompatActivity implements View.OnClick
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_dashboard);
 
+
         drawerLayout =findViewById(R.id.drawer_layout);
         navigationView =findViewById(R.id.nav_view);
         loadingView=findViewById(R.id.loadingView);
         dashboard=findViewById(R.id.dashboard_header);
-        progressBar=findViewById(R.id.dashboard_progress_bar);
+
         dashboardGenderIcon=findViewById(R.id.dashboard_gender_icon);
         dashboardDrawerBtn=findViewById(R.id.dashboard_drawer_btn);
 
@@ -115,28 +123,49 @@ public class DashboardActivity extends AppCompatActivity implements View.OnClick
         myPatientsCardView=findViewById(R.id.cardView_myPatients);
         allDonorsCardView=findViewById(R.id.cardView_exploreA);
         allPatientsCardView=findViewById(R.id.cardView_exploreB);
+        exploreCCardView=findViewById(R.id.cardView_exploreC);
+        exploreDCardView=findViewById(R.id.cardView_exploreD);
+        exploreECardView=findViewById(R.id.cardView_exploreE);
+        exploreFCardView=findViewById(R.id.cardView_exploreF);
 
 
         numberOfDonors=findViewById(R.id.dashboard_no_of_donors);
-        numberOfDonorsText=findViewById(R.id.dashboard_text_no_of_donors);
         numberOfPatients=findViewById(R.id.dashboard_no_of_patients);
-        numberOfPatientsText=findViewById(R.id.dashboard_text_no_of_patients);
         numberOfRequestsFromDonors=findViewById(R.id.dashboard_no_of_requests_from_donors);
         numberOfRequestsFromDonorsText=findViewById(R.id.dashboard_text_no_of_requests_from_donors);
         numberOfRequestsFromPatients=findViewById(R.id.dashboard_no_of_requests_from_patients);
         numberOfRequestsFromPatientsText=findViewById(R.id.dashboard_text_no_of_requests_from_patients);
+        exploreCText=findViewById(R.id.dashboard_text_exploreC);
+        exploreDText=findViewById(R.id.dashboard_text_exploreD);
+        exploreEText=findViewById(R.id.dashboard_text_exploreE);
+        exploreFText=findViewById(R.id.dashboard_text_exploreF0);
+
+        xRay=findViewById(R.id.dashboard_button_x_ray);
 
 
-        nameSplit = loggedInUserName.split("");
+
         loadingView.setVisibility(View.VISIBLE);
 
         fromDonorsCardView.setVisibility(View.GONE);
         fromPatientsCardView.setVisibility(View.GONE);
         allDonorsCardView.setVisibility(View.GONE);
         allPatientsCardView.setVisibility(View.GONE);
+        exploreCCardView.setVisibility(View.GONE);
+        exploreDCardView.setVisibility(View.GONE);
+        exploreECardView.setVisibility(View.GONE);
+        exploreFCardView.setVisibility(View.GONE);
+
 
 
         downloadImage(loggedInUserPhone);
+
+        xRay.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent=new Intent(DashboardActivity.this,XRayActivity.class);
+                startActivity(intent);
+            }
+        });
 
 
 
@@ -182,15 +211,17 @@ public class DashboardActivity extends AppCompatActivity implements View.OnClick
 
                 noOfDonors = response.body().getNumberOfDonors();
                 noOfPatients = response.body().getNumberOfPatients();
-                noOfRequests = response.body().getNumberOfRequests();
-                noOfResponses = response.body().getNumberOfResponses();
+                noOfRequestsFromDonors = response.body().getNumberOfRequestsFromDonors();
+                noOfRequestsFromPatients = response.body().getNumberOfRequestsFromPatients();
+                noOfResponsesFromDonors = response.body().getNumberOfResponsesFromDonors();
+                noOfResponsesFromPatients = response.body().getNumberOfResponsesFromPatients();
 
             }
 
             @Override
             public void onFailure(Call<DashBoardNumberModel> call, Throwable t) {
+                loadingView.setVisibility(View.GONE);
 
-                ToastCreator.toastCreatorRed(DashboardActivity.this,getResources().getString(R.string.dashboard_error_message));
 
             }
         });
@@ -201,26 +232,66 @@ public class DashboardActivity extends AppCompatActivity implements View.OnClick
             @Override
             public void onResponse(Call<DashBoardNumberModel> call, Response<DashBoardNumberModel> response) {
 
-                if(response.body().getServerMsg().equals("true")) {
-                    if (response.body().getEligibility().equals("eligible")) {
+                if(response.body().getServerMsg().toLowerCase().equals("true")) {
+                    if (response.body().getEligibility().toLowerCase().equals("eligible")) {
                         loggedInUserEligibility = "eligible";
-                    } else if (response.body().getEligibility().equals("not_eligible")) {
+                    } else if (response.body().getEligibility().toLowerCase().equals("not_eligible")) {
                         loggedInUserEligibility = "not_eligible";
                     }
-                    //ToastCreator.toastCreatorGreen(getApplicationContext(),loggedInUserEligibility);
-
-
-                }
-                else if(response.body().getServerMsg().equals("false")){
-                    ToastCreator.toastCreatorRed(getApplicationContext(),"Connection failed! Please try again");
                 }
             }
 
             @Override
             public void onFailure(Call<DashBoardNumberModel> call, Throwable t) {
-                ToastCreator.toastCreatorRed(getApplicationContext(),"Error occurred! Please try again");
             }
         });
+
+
+
+        retroInterface = RetroInstance.getRetro();
+        Call<UserDataModel> checkNotification = retroInterface.checkNotification(loggedInUserPhone);
+        checkNotification.enqueue(new Callback<UserDataModel>() {
+            @Override
+            public void onResponse(Call<UserDataModel> call, Response<UserDataModel> response) {
+
+                if(response.body().getServerMsg().equals("No Notifications")){
+
+                }
+                else{
+                    nameOfActivity = response.body().getServerMsg();
+
+
+                    if(nameOfActivity.equals("RequestsFromPatientsActivity")) {
+                        Intent intent = new Intent(getApplicationContext(), RequestsFromPatientsActivity.class);
+                        startActivity(intent);
+                    }
+                    if(nameOfActivity.equals("RequestsFromDonorsActivity")) {
+                        Intent intent = new Intent(getApplicationContext(), RequestsFromDonorsActivity.class);
+                        startActivity(intent);
+                    }
+                    if(nameOfActivity.equals("DonorResponseActivity")) {
+                        Intent intent = new Intent(getApplicationContext(), DonorResponseActivity.class);
+                        startActivity(intent);
+                    }
+                    if(nameOfActivity.equals("PatientResponseActivity")) {
+                        Intent intent = new Intent(getApplicationContext(), PatientResponseActivity.class);
+                        startActivity(intent);
+                    }
+                    if(nameOfActivity.equals("MyPatientsActivity")) {
+                        Intent intent = new Intent(getApplicationContext(), MyPatientsActivity.class);
+                        startActivity(intent);
+                    }
+                }
+
+            }
+
+            @Override
+            public void onFailure(Call<UserDataModel> call, Throwable t) {
+            }
+        });
+
+
+
 
         navigationView.setNavigationItemSelectedListener(this);
         dashboardGenderIcon.setOnClickListener(this);
@@ -236,6 +307,16 @@ public class DashboardActivity extends AppCompatActivity implements View.OnClick
         myPatientsCardView.setOnClickListener(this);
         allDonorsCardView.setOnClickListener(this);
         allPatientsCardView.setOnClickListener(this);
+        exploreCCardView.setOnClickListener(this);
+        exploreDCardView.setOnClickListener(this);
+        exploreECardView.setOnClickListener(this);
+        exploreFCardView.setOnClickListener(this);
+        exploreCText.setOnClickListener(this);
+        exploreDText.setOnClickListener(this);
+        exploreEText.setOnClickListener(this);
+        exploreFText.setOnClickListener(this);
+
+
 
 
     }
@@ -243,9 +324,26 @@ public class DashboardActivity extends AppCompatActivity implements View.OnClick
     @Override
     protected void onResume() {
         super.onResume();
+if(LoginUser.checkLoginStat().equals("failed")){
+    SharedPreferences sharedPreferences = getSharedPreferences(LOGIN_SHARED_PREFS, MODE_PRIVATE);
+    String phone,password;
+
+    if (sharedPreferences.contains(LOGIN_USER_PHONE) && sharedPreferences.contains(LOGIN_USER_PASS)) {
+        phone = sharedPreferences.getString(LOGIN_USER_PHONE, "");
+        password= sharedPreferences.getString(LOGIN_USER_PASS, "");
+
+        LoginUser.loginUser(this,phone,password,DashboardActivity.class);
+    }
+    else {
+        ToastCreator.toastCreatorRed(this,getString(R.string.login_failed));
+        Intent intent=new Intent(this,LoginActivity.class);
+        startActivity(intent);
+        finish();
+    }
+}
 
 
-        nameSplit = loggedInUserName.split("");
+
         loadingView.setVisibility(View.VISIBLE);
 
 
@@ -259,12 +357,12 @@ public class DashboardActivity extends AppCompatActivity implements View.OnClick
             @Override
             public void onResponse(Call<DashBoardNumberModel> call, Response<DashBoardNumberModel> response) {
                 loadingView.setVisibility(View.GONE);
-
-
                 noOfDonors = response.body().getNumberOfDonors();
                 noOfPatients = response.body().getNumberOfPatients();
-                noOfRequests = response.body().getNumberOfRequests();
-                noOfResponses = response.body().getNumberOfResponses();
+                noOfRequestsFromDonors = response.body().getNumberOfRequestsFromDonors();
+                noOfRequestsFromPatients = response.body().getNumberOfRequestsFromPatients();
+                noOfResponsesFromDonors = response.body().getNumberOfResponsesFromDonors();
+                noOfResponsesFromPatients = response.body().getNumberOfResponsesFromPatients();
 
                 numberOfDonors.setText(noOfDonors);
                 numberOfPatients.setText(noOfPatients);
@@ -277,8 +375,8 @@ public class DashboardActivity extends AppCompatActivity implements View.OnClick
                         fromPatientsCardView.setVisibility(View.VISIBLE);
                         numberOfRequestsFromDonorsText.setText(getResources().getString(R.string.requests));
                         numberOfRequestsFromPatientsText.setText(getResources().getString(R.string.requests));
-                        numberOfRequestsFromDonors.setText(noOfResponses);
-                        numberOfRequestsFromPatients.setText(noOfRequests);
+                        numberOfRequestsFromDonors.setText(noOfRequestsFromDonors);
+                        numberOfRequestsFromPatients.setText(noOfRequestsFromPatients);
                     }
 
                     if(requestResponseSwitcher == 2){
@@ -288,8 +386,8 @@ public class DashboardActivity extends AppCompatActivity implements View.OnClick
                         fromPatientsCardView.setVisibility(View.VISIBLE);
                         numberOfRequestsFromDonorsText.setText(getResources().getString(R.string.responses));
                         numberOfRequestsFromPatientsText.setText(getResources().getString(R.string.responses));
-                        numberOfRequestsFromDonors.setText(noOfRequests);
-                        numberOfRequestsFromPatients.setText(noOfResponses);
+                        numberOfRequestsFromDonors.setText(noOfResponsesFromDonors);
+                        numberOfRequestsFromPatients.setText(noOfResponsesFromPatients);
                     }
                 }
                 else if(requestResponseCardViewSwitcher == 0) {
@@ -304,12 +402,20 @@ public class DashboardActivity extends AppCompatActivity implements View.OnClick
                     exploreSwitcher=1;
                     allDonorsCardView.setVisibility(View.VISIBLE);
                     allPatientsCardView.setVisibility(View.VISIBLE);
+                    exploreCCardView.setVisibility(View.VISIBLE);
+                    exploreDCardView.setVisibility(View.VISIBLE);
+                    exploreECardView.setVisibility(View.VISIBLE);
+                    exploreFCardView.setVisibility(View.VISIBLE);
 
                 }
                 else if(exploreSwitcher==0) {
                     exploreSwitcher=0;
                     allDonorsCardView.setVisibility(View.GONE);
                     allPatientsCardView.setVisibility(View.GONE);
+                    exploreCCardView.setVisibility(View.GONE);
+                    exploreDCardView.setVisibility(View.GONE);
+                    exploreECardView.setVisibility(View.GONE);
+                    exploreFCardView.setVisibility(View.GONE);
                 }
 
 
@@ -318,7 +424,7 @@ public class DashboardActivity extends AppCompatActivity implements View.OnClick
             @Override
             public void onFailure(Call<DashBoardNumberModel> call, Throwable t) {
 
-                ToastCreator.toastCreatorRed(DashboardActivity.this,getResources().getString(R.string.dashboard_error_message));
+                loadingView.setVisibility(View.GONE);
 
             }
         });
@@ -329,25 +435,25 @@ public class DashboardActivity extends AppCompatActivity implements View.OnClick
             @Override
             public void onResponse(Call<DashBoardNumberModel> call, Response<DashBoardNumberModel> response) {
 
-                if(response.body().getServerMsg().equals("true")) {
-                    if (response.body().getEligibility().equals("eligible")) {
+                if(response.body().getServerMsg().toLowerCase().equals("true")) {
+                    if (response.body().getEligibility().toLowerCase().equals("eligible")) {
                         loggedInUserEligibility = "eligible";
-                    } else if (response.body().getEligibility().equals("not_eligible")) {
+                    } else if (response.body().getEligibility().toLowerCase().equals("not_eligible")) {
                         loggedInUserEligibility = "not_eligible";
                     }
 
 
                 }
-                else if(response.body().getServerMsg().equals("false")){
-                    ToastCreator.toastCreatorRed(getApplicationContext(),"Connection failed! Please try again");
+                else if(response.body().getServerMsg().toLowerCase().equals("false")){
                 }
             }
 
             @Override
             public void onFailure(Call<DashBoardNumberModel> call, Throwable t) {
-                ToastCreator.toastCreatorRed(getApplicationContext(),"Error occurred! Please try again");
             }
         });
+
+
 
 
         dashboardGenderIcon.setOnClickListener(this);
@@ -364,6 +470,14 @@ public class DashboardActivity extends AppCompatActivity implements View.OnClick
         myPatientsCardView.setOnClickListener(this);
         allDonorsCardView.setOnClickListener(this);
         allPatientsCardView.setOnClickListener(this);
+        exploreCCardView.setOnClickListener(this);
+        exploreDCardView.setOnClickListener(this);
+        exploreECardView.setOnClickListener(this);
+        exploreFCardView.setOnClickListener(this);
+        exploreCText.setOnClickListener(this);
+        exploreDText.setOnClickListener(this);
+        exploreEText.setOnClickListener(this);
+        exploreFText.setOnClickListener(this);
 
     }
 
@@ -383,17 +497,14 @@ public class DashboardActivity extends AppCompatActivity implements View.OnClick
             languageAlertDialog("bn");
         }
         else if (id == R.id.shareApp){
-            Uri uri = Uri.parse("market://details?id=" + getApplicationContext().getPackageName());
-            Intent goToMarket = new Intent(Intent.ACTION_VIEW, uri);
-            goToMarket.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY |
-                    Intent.FLAG_ACTIVITY_NEW_DOCUMENT |
-                    Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
-            try {
-                startActivity(goToMarket);
-            } catch (ActivityNotFoundException e) {
-                startActivity(new Intent(Intent.ACTION_VIEW,
-                        Uri.parse("http://play.google.com/store/apps/details?id=" + getApplicationContext().getPackageName())));
-            }
+            Intent shareIntent=new Intent((Intent.ACTION_SEND));
+            shareIntent.setType("text/plain");
+            String shareBody="Blood and Plasma Banking solution app: Plasma+\n http://play.google.com/store/apps/details?id=" + getApplicationContext().getPackageName();
+            String shareSub="Plasma+";
+            shareIntent.putExtra(Intent.EXTRA_SUBJECT,shareSub);
+            shareIntent.putExtra(Intent.EXTRA_TEXT,shareBody);
+            startActivity(Intent.createChooser(shareIntent,"Share Using"));
+
         }
         else if (id == R.id.emailUs){
 
@@ -405,8 +516,30 @@ public class DashboardActivity extends AppCompatActivity implements View.OnClick
             intent.putExtra(Intent.EXTRA_EMAIL, new String[]{email});
             intent.putExtra(Intent.EXTRA_SUBJECT, subject);
             intent.putExtra(Intent.EXTRA_TEXT, body);
-            //intent.setData(Uri.parse("mailto:"+id+"?cc="+"&subject="+Uri.encode(subject)+"&body="+Uri.encode(body)));
             startActivityForResult(intent,200);
+        }
+
+        else if(id == R.id.sendReview){
+            Uri uri = Uri.parse("https://docs.google.com/forms/d/e/1FAIpQLSd_PgXtE8sYdaxCIp4pPXM6IqU7ZvoA963iBksFejGIOUYH6g/viewform?usp=sf_link");
+            Intent review = new Intent(Intent.ACTION_VIEW, uri);
+            startActivity(review);
+        }
+
+        else if(id == R.id.rateApp){
+
+            Uri uri = Uri.parse("http://play.google.com/store/apps/details?id=" + getApplicationContext().getPackageName());
+            Intent goToMarket = new Intent(Intent.ACTION_VIEW, uri);
+            goToMarket.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY |
+                    Intent.FLAG_ACTIVITY_NEW_DOCUMENT |
+                    Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
+            startActivity(goToMarket);
+//            try {
+//                startActivity(goToMarket);
+//            } catch (ActivityNotFoundException e) {
+//                startActivity(new Intent(Intent.ACTION_VIEW,
+//                        Uri.parse("http://play.google.com/store/apps/details?id=" + getApplicationContext().getPackageName())));
+//            }
+
         }
 
         drawerLayout.closeDrawer(GravityCompat.START);
@@ -424,13 +557,56 @@ public class DashboardActivity extends AppCompatActivity implements View.OnClick
             backCounter++;
             if (backCounter == 1) {
 
-                ToastCreator.toastCreatorRed(DashboardActivity.this,getResources().getString(R.string.dashboard_text_Press_back_one_more_time_to_exit));
+                ToastCreator.toastCreatorRed(DashboardActivity.this,getResources().getString(R.string.press_one_more_time));
+                final Handler handler = new Handler();
+                handler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        backCounter--;
+                    }
+                }, 3000);
             }
             if (backCounter == 2) {
-                finish();
+                finishAffinity();
+
             }
+
         }
     }
+
+//    private void inAppReview(){
+//
+//        manager = ReviewManagerFactory.create(this);
+//        com.google.android.play.core.tasks.Task<ReviewInfo> request = manager.requestReviewFlow()
+//                .addOnCompleteListener(new com.google.android.play.core.tasks.OnCompleteListener<ReviewInfo>() {
+//            @Override
+//            public void onComplete(@NonNull com.google.android.play.core.tasks.Task<ReviewInfo> task) {
+//                if(task.isSuccessful()){
+//                    reviewInfo = task.getResult();
+//
+//                    manager.launchReviewFlow(DashboardActivity.this, reviewInfo)
+//                            .addOnCompleteListener(new com.google.android.play.core.tasks.OnCompleteListener<Void>() {
+//                                @Override
+//                                public void onComplete(@NonNull com.google.android.play.core.tasks.Task<Void> task) {
+//                                    ToastCreator.toastCreatorGreen(getApplicationContext(),getResources().getString(R.string.rating_successful));
+//                                }
+//                            })
+//                            .addOnFailureListener(new OnFailureListener() {
+//                        @Override
+//                        public void onFailure(Exception e) {
+//                            ToastCreator.toastCreatorRed(getApplicationContext(),getResources().getString(R.string.rating_failed));
+//                        }
+//                    });
+//                }
+//            }
+//        })
+//                .addOnFailureListener(new OnFailureListener() {
+//                    @Override
+//                    public void onFailure(Exception e) {
+//                        ToastCreator.toastCreatorRed(getApplicationContext(),getResources().getString(R.string.rating_failed));
+//                    }
+//                });
+//    }
 
 
 
@@ -438,6 +614,7 @@ public class DashboardActivity extends AppCompatActivity implements View.OnClick
     private void languageAlertDialog(String lang){
         AlertDialog.Builder builder = new AlertDialog.Builder(DashboardActivity.this);
         builder.setMessage(getResources().getString(R.string.are_you_sure));
+        builder.setCancelable(false);
         builder.setPositiveButton(getResources().getString(R.string.change_language), new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int id) {
                setLocale(lang);
@@ -485,6 +662,7 @@ public class DashboardActivity extends AppCompatActivity implements View.OnClick
 
     }
 
+
     // slide the view from its current position to below itself
     public void slideDown(View view) {
 
@@ -500,12 +678,29 @@ public class DashboardActivity extends AppCompatActivity implements View.OnClick
 
     }
 
+    // slide the view from its current position to below itself
+    public void slideDownInactive(CardView view) {
+
+
+        view.setVisibility(View.VISIBLE);
+        view.setEnabled(false);
+        view.setCardBackgroundColor(Color.LTGRAY);
+
+// Start the animation
+        view.animate()
+                .translationY(0)
+                .alpha(1)
+                .setListener(null);
+
+    }
+
 
 
 
 
     @Override
     public void onClick(View view) {
+        if(ClickTimeChecker.clickTimeChecker()) {
         switch(view.getId()){
             case R.id.dashboard_drawer_btn:
                 drawerLayout.openDrawer(Gravity.LEFT);
@@ -535,11 +730,15 @@ public class DashboardActivity extends AppCompatActivity implements View.OnClick
                     requestResponseCardViewSwitcher = 1;
                     requestResponseSwitcher = 1;
                     slideDown(fromDonorsCardView);
-                    slideDown(fromPatientsCardView);
+                    if(!loggedInUserDonorInfo.toLowerCase().equals("none")) {
+                        slideDown(fromPatientsCardView);
+                    } else {
+                        slideDownInactive(fromPatientsCardView);
+                    }
                     numberOfRequestsFromDonorsText.setText(getResources().getString(R.string.requests));
                     numberOfRequestsFromPatientsText.setText(getResources().getString(R.string.requests));
-                    numberOfRequestsFromDonors.setText(noOfResponses);
-                    numberOfRequestsFromPatients.setText(noOfRequests);
+                    numberOfRequestsFromDonors.setText(noOfRequestsFromDonors);
+                    numberOfRequestsFromPatients.setText(noOfRequestsFromPatients);
 
                     break;
                 }
@@ -558,11 +757,15 @@ public class DashboardActivity extends AppCompatActivity implements View.OnClick
                     requestResponseCardViewSwitcher = 1;
                     requestResponseSwitcher = 2;
                     slideDown(fromDonorsCardView);
-                    slideDown(fromPatientsCardView);
+                    if(!loggedInUserDonorInfo.toLowerCase().equals("none")) {
+                        slideDown(fromPatientsCardView);
+                    } else {
+                        slideDownInactive(fromPatientsCardView);
+                    }
                     numberOfRequestsFromDonorsText.setText(getResources().getString(R.string.responses));
                     numberOfRequestsFromPatientsText.setText(getResources().getString(R.string.responses));
-                    numberOfRequestsFromDonors.setText(noOfRequests);
-                    numberOfRequestsFromPatients.setText(noOfResponses);
+                    numberOfRequestsFromDonors.setText(noOfResponsesFromDonors);
+                    numberOfRequestsFromPatients.setText(noOfResponsesFromPatients);
                     break;
                 }
                 if(requestResponseCardViewSwitcher ==1) {
@@ -578,7 +781,7 @@ public class DashboardActivity extends AppCompatActivity implements View.OnClick
             case R.id.dashboard_img_requestA:
             case R.id.cardView_requestA:
                 if(requestResponseSwitcher == 1) {
-                    Intent checkPatientRequestsIntent = new Intent(DashboardActivity.this, PatientRequestsActivity.class);
+                    Intent checkPatientRequestsIntent = new Intent(DashboardActivity.this, RequestsFromDonorsActivity.class);
                     startActivity(checkPatientRequestsIntent);
                     break;
                 }
@@ -592,7 +795,7 @@ public class DashboardActivity extends AppCompatActivity implements View.OnClick
             case R.id.dashboard_img_requestB:
             case R.id.cardView_requestB:
                 if(requestResponseSwitcher == 1) {
-                    Intent checkDonorRequestsIntent = new Intent(DashboardActivity.this, DonorRequestsActivity.class);
+                    Intent checkDonorRequestsIntent = new Intent(DashboardActivity.this, RequestsFromPatientsActivity.class);
                     startActivity(checkDonorRequestsIntent);
                     break;
 
@@ -613,6 +816,10 @@ public class DashboardActivity extends AppCompatActivity implements View.OnClick
                     exploreSwitcher=1;
                     slideDown(allDonorsCardView);
                     slideDown(allPatientsCardView);
+                    slideDown(exploreCCardView);
+                    slideDown(exploreDCardView);
+                    slideDown(exploreECardView);
+                    slideDown(exploreFCardView);
                     numberOfDonors.setText(noOfDonors);
                     numberOfPatients.setText(noOfPatients);
                     break;
@@ -621,6 +828,10 @@ public class DashboardActivity extends AppCompatActivity implements View.OnClick
                     exploreSwitcher=0;
                     slideUp(allDonorsCardView);
                     slideUp(allPatientsCardView);
+                    slideUp(exploreCCardView);
+                    slideUp(exploreDCardView);
+                    slideUp(exploreECardView);
+                    slideUp(exploreFCardView);
                     break;
                 }
                 break;
@@ -637,6 +848,26 @@ public class DashboardActivity extends AppCompatActivity implements View.OnClick
                 Intent allPatientsIntent=new Intent(DashboardActivity.this, ExplorePatientsActivity.class);
                 startActivity(allPatientsIntent);
                 break;
+            case R.id.cardView_exploreC:
+            case R.id.dashboard_text_exploreC:
+                Intent exploreCIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://corona.gov.bd"));
+                startActivity(exploreCIntent);
+                break;
+            case R.id.cardView_exploreD:
+            case R.id.dashboard_text_exploreD:
+                Intent exploreDIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://www.worldometers.info/coronavirus"));
+                startActivity(exploreDIntent);
+                break;
+            case R.id.cardView_exploreE:
+            case R.id.dashboard_text_exploreE:
+                Intent exploreEIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://covid19.who.int"));
+                startActivity(exploreEIntent);
+                break;
+            case R.id.cardView_exploreF:
+            case R.id.dashboard_text_exploreF0:
+                Intent exploreFIntent = new Intent(Intent.ACTION_DIAL, Uri.parse("tel:10655"));
+                startActivity(exploreFIntent);
+                break;
 
             case R.id.dashboard_text_my_patients:
             case R.id.dashboard_img_my_patients:
@@ -645,22 +876,23 @@ public class DashboardActivity extends AppCompatActivity implements View.OnClick
                 startActivity(viewMyPatientsIntent);
                 break;
 
-            case R.id.dashboard_header:
-                RetroInterface retroInterface = RetroInstance.getRetro();
-                Call<UserDataModel> incomingResponse = retroInterface.sendNotification(loggedInUserPhone,getResources().getString(R.string.dashboard_header),getResources().getString(R.string.dashboard_welcome_to));
-                incomingResponse.enqueue(new Callback<UserDataModel>() {
-                    @Override
-                    public void onResponse(Call<UserDataModel> call, Response<UserDataModel> response) {
-
-                    }
-
-                    @Override
-                    public void onFailure(Call<UserDataModel> call, Throwable t) {
-
-                    }
-                });
+//            case R.id.dashboard_header:
+//                RetroInterface retroInterface = RetroInstance.getRetro();
+//                Call<UserDataModel> incomingResponse = retroInterface.sendNotification(loggedInUserPhone,getResources().getString(R.string.dashboard_header),getResources().getString(R.string.dashboard_welcome_to),"DashboardActivity","");
+//                incomingResponse.enqueue(new Callback<UserDataModel>() {
+//                    @Override
+//                    public void onResponse(Call<UserDataModel> call, Response<UserDataModel> response) {
+//
+//                    }
+//
+//                    @Override
+//                    public void onFailure(Call<UserDataModel> call, Throwable t) {
+//
+//                    }
+//                });
 
         }
+    }
     }
 
     private Bitmap scaleImage(Bitmap bitmap) {
@@ -671,18 +903,13 @@ public class DashboardActivity extends AppCompatActivity implements View.OnClick
         int bounding = dpToPx(150);
 
 
-        // Determine how much to scale: the dimension requiring less scaling is
-        // closer to the its side. This way the image always stays inside your
-        // bounding box AND either x/y axis touches it.
         float xScale = ((float) bounding) / width;
         float yScale = ((float) bounding) / height;
         float scale = (xScale <= yScale) ? xScale : yScale;
 
-        // Create a matrix for the scaling and add the scaling data
         Matrix matrix = new Matrix();
         matrix.postScale(scale, scale);
 
-        // Create a new bitmap and convert it to a format understood by the ImageView
         Bitmap scaledBitmap = Bitmap.createBitmap(bitmap, 0, 0, width, height, matrix, true);
 
         return scaledBitmap;
@@ -739,7 +966,7 @@ public class DashboardActivity extends AppCompatActivity implements View.OnClick
             @Override
             public void onResponse(Call<ImageDataModel> call, Response<ImageDataModel> response) {
 
-                if(response.body().getServerMsg().equals("true")){
+                if(response.body().getServerMsg().toLowerCase().equals("true")){
                     String image = response.body().getImage();
                     byte[] imageByte = Base64.decode(image, Base64.DEFAULT);
                     insertBitmap = BitmapFactory.decodeByteArray(imageByte, 0, imageByte.length);
@@ -747,11 +974,11 @@ public class DashboardActivity extends AppCompatActivity implements View.OnClick
                     showImage(dashboardGenderIcon, insertBitmap, R.drawable.profile_icon_male);
                 }
 
-                else if(response.body().getServerMsg().equals("false")) {
+                else if(response.body().getServerMsg().toLowerCase().equals("false")) {
 
                     if (loggedInUserGender.toLowerCase().equals("male")) {
                         showDrawable(dashboardGenderIcon,R.drawable.profile_icon_male);
-                    } else if (loggedInUserGender.toLowerCase().equals("male")) {
+                    } else if (loggedInUserGender.toLowerCase().equals("female")) {
                         showDrawable(dashboardGenderIcon,R.drawable.profile_icon_female);
                     }
                 }
@@ -761,16 +988,19 @@ public class DashboardActivity extends AppCompatActivity implements View.OnClick
             @Override
             public void onFailure(Call<ImageDataModel> call, Throwable t) {
 
-                ToastCreator.toastCreatorRed(DashboardActivity.this,getResources().getString(R.string.image_retrieve_failed));
-
 
                 if (loggedInUserGender.toLowerCase().equals("male")) {
                     dashboardGenderIcon.setImageResource(R.drawable.profile_icon_male);
-                } else if (loggedInUserGender.toLowerCase().equals("male")) {
+                } else if (loggedInUserGender.toLowerCase().equals("female")) {
                     dashboardGenderIcon.setImageResource(R.drawable.profile_icon_female);
                 }
             }
         });
 
     }
+
+
 }
+
+
+

@@ -22,7 +22,9 @@ import androidx.annotation.NonNull;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.ece.cov19.DataModels.FindPatientData;
 import com.ece.cov19.DataModels.ImageDataModel;
+import com.ece.cov19.DataModels.PatientDataModel;
 import com.ece.cov19.DataModels.UserDataModel;
 import com.ece.cov19.Functions.ToastCreator;
 import com.ece.cov19.R;
@@ -48,10 +50,13 @@ public class DonorResponseBetaAdapter extends RecyclerView.Adapter<DonorResponse
 
     Bitmap insertBitmap;
     Uri imageUri;
+    int pos;
+
 
     public DonorResponseBetaAdapter(Context context, ArrayList<UserDataModel> userDataModels) {
         this.context = context;
         this.userDataModels = userDataModels;
+
     }
 
 
@@ -62,6 +67,7 @@ public class DonorResponseBetaAdapter extends RecyclerView.Adapter<DonorResponse
         LayoutInflater layoutInflater = LayoutInflater.from(context);
         View view = layoutInflater.inflate(R.layout.request_donor_child, parent, false);
         DonorResponseBetaViewHolder donorResponseBetaViewHolder = new DonorResponseBetaViewHolder(view, userDataModels);
+
         return donorResponseBetaViewHolder;
     }
 
@@ -70,31 +76,73 @@ public class DonorResponseBetaAdapter extends RecyclerView.Adapter<DonorResponse
 
         userDataModel = userDataModels.get(position);
 
+
         holder.nameTextView.setText(userDataModel.getName());
         holder.locationTextView.setText(userDataModel.getDistrict());
         holder.bloodTextView.setText(userDataModel.getBloodGroup());
-        holder.donorType.setText(userDataModel.getDonor());
+        if(userDataModel.getDonor().equals("Blood")){
+            holder.donorType.setText(holder.itemView.getContext().getResources().getString(R.string.blood));
+        }
+        else if(userDataModel.getDonor().equals("Plasma")){
+            holder.donorType.setText(holder.itemView.getContext().getResources().getString(R.string.plasma));
+        }
+        else if(userDataModel.getDonor().equals("Blood and Plasma")){
+            holder.donorType.setText(holder.itemView.getContext().getResources().getString(R.string.bloodandplasma));
+        }
+        downloadImage(userDataModel.getPhone(), holder.donorImageView, userDataModel.getGender());
 
-        downloadImage(userDataModel.getPhone(), holder.donorImageView);
 
-
-        if(userDataModel.getServerMsg().equals("Pending")) {
+        if(userDataModel.getServerMsg().toLowerCase().equals("pending")) {
             holder.acceptButton.setVisibility(View.VISIBLE);
-            holder.acceptButton.setText(context.getResources().getString(R.string.adapter_Pending));
+            holder.acceptButton.setText(context.getResources().getString(R.string.pending));
             holder.acceptButton.setBackgroundResource(R.drawable.button_style_orange);
             holder.acceptButton.setTextColor(Color.parseColor("#FFFFFF"));
             holder.declineButton.setVisibility(View.GONE);
         }
-        else if(userDataModel.getServerMsg().equals("Accepted")){
+        else if(userDataModel.getServerMsg().toLowerCase().equals("accepted")){
             holder.acceptButton.setVisibility(View.VISIBLE);
-            holder.acceptButton.setText(context.getResources().getString(R.string.adapter_Accepted));
+            holder.acceptButton.setText(context.getResources().getString(R.string.accepted));
             holder.acceptButton.setBackgroundResource(R.drawable.button_style_green);
             holder.acceptButton.setTextColor(Color.parseColor("#FFFFFF"));
             holder.declineButton.setVisibility(View.GONE);
         }
-        else if(userDataModel.getServerMsg().equals("Declined")){
+        else if(userDataModel.getServerMsg().toLowerCase().equals("donated")){
             holder.acceptButton.setVisibility(View.VISIBLE);
-            holder.acceptButton.setText(context.getResources().getString(R.string.adapter_Declined));
+            holder.acceptButton.setText(context.getResources().getString(R.string.donated));
+            holder.acceptButton.setBackgroundResource(R.drawable.button_style_green);
+            holder.acceptButton.setTextColor(Color.parseColor("#FFFFFF"));
+            holder.declineButton.setVisibility(View.GONE);
+        }
+        else if(userDataModel.getServerMsg().toLowerCase().equals("not_donated")){
+            holder.acceptButton.setVisibility(View.VISIBLE);
+            holder.acceptButton.setText(context.getResources().getString(R.string.not_donated));
+            holder.acceptButton.setBackgroundResource(R.drawable.button_style_yellow);
+            holder.acceptButton.setTextColor(Color.parseColor("#FFFFFF"));
+            holder.declineButton.setVisibility(View.GONE);
+        }
+        else if(userDataModel.getServerMsg().toLowerCase().equals("declined")){
+            holder.acceptButton.setVisibility(View.VISIBLE);
+            holder.acceptButton.setText(context.getResources().getString(R.string.declined));
+            holder.acceptButton.setBackgroundResource(R.drawable.button_style_red);
+            holder.acceptButton.setTextColor(Color.parseColor("#FFFFFF"));
+            holder.declineButton.setVisibility(View.GONE);
+        }
+        else if(userDataModel.getServerMsg().toLowerCase().equals("claimed")){
+            holder.acceptButton.setVisibility(View.VISIBLE);
+            holder.acceptButton.setText(context.getResources().getString(R.string.claimed));
+            holder.acceptButton.setBackgroundResource(R.drawable.button_style_green);
+            holder.acceptButton.setTextColor(Color.parseColor("#FFFFFF"));
+            holder.declineButton.setVisibility(View.GONE);
+        }
+        else if(userDataModel.getServerMsg().toLowerCase().equals("not_confirmed")){
+            holder.acceptButton.setVisibility(View.VISIBLE);
+            holder.acceptButton.setText(context.getResources().getString(R.string.not_confirmed));
+            holder.acceptButton.setBackgroundResource(R.drawable.button_style_yellow);
+            holder.acceptButton.setTextColor(Color.parseColor("#FFFFFF"));
+            holder.declineButton.setVisibility(View.GONE);
+        }    else if(userDataModel.getServerMsg().toLowerCase().equals("canceled")){
+            holder.acceptButton.setVisibility(View.VISIBLE);
+            holder.acceptButton.setText(context.getResources().getString(R.string.canceled));
             holder.acceptButton.setBackgroundResource(R.drawable.button_style_red);
             holder.acceptButton.setTextColor(Color.parseColor("#FFFFFF"));
             holder.declineButton.setVisibility(View.GONE);
@@ -103,7 +151,7 @@ public class DonorResponseBetaAdapter extends RecyclerView.Adapter<DonorResponse
 
         //ToastCreator.toastCreator(holder.itemView.getContext(), userDataModel.getServerMsg(), Toast.LENGTH_SHORT).show();
 
-            if(userDataModel.getGender().equals("male")) {
+            if(userDataModel.getGender().toLowerCase().equals("male")) {
             holder.donorImageView.setImageResource(R.drawable.profile_icon_male);
         } else {
             holder.donorImageView.setImageResource(R.drawable.profile_icon_female);
@@ -185,24 +233,24 @@ public class DonorResponseBetaAdapter extends RecyclerView.Adapter<DonorResponse
 
 
 
-    private void downloadImage(String title, ImageView genderImageView) {
+    private void downloadImage(String title, ImageView genderImageView, String gender) {
         RetroInterface retroInterface = RetroInstance.getRetro();
         Call<ImageDataModel> incomingResponse = retroInterface.downloadImage(title);
         incomingResponse.enqueue(new Callback<ImageDataModel>() {
             @Override
             public void onResponse(Call<ImageDataModel> call, Response<ImageDataModel> response) {
 
-                if (response.body().getServerMsg().equals("true")) {
+                if (response.body().getServerMsg().toLowerCase().equals("true")) {
                     String image = response.body().getImage();
                     byte[] imageByte = Base64.decode(image, Base64.DEFAULT);
                     insertBitmap = BitmapFactory.decodeByteArray(imageByte, 0, imageByte.length);
                     insertBitmap = scaleImage(insertBitmap);
                     showImage(genderImageView, insertBitmap, R.drawable.profile_icon_male);
-                } else if (response.body().getServerMsg().equals("false")) {
+                } else if (response.body().getServerMsg().toLowerCase().equals("false")) {
 
-                    if (loggedInUserGender.toLowerCase().equals("male")) {
+                    if (gender.toLowerCase().toLowerCase().equals("male")) {
                         showDrawable(genderImageView, R.drawable.profile_icon_male);
-                    } else if (loggedInUserGender.toLowerCase().equals("female")) {
+                    } else if (gender.toLowerCase().toLowerCase().equals("female")) {
                         showDrawable(genderImageView, R.drawable.profile_icon_female);
                     }
                 }
@@ -211,12 +259,11 @@ public class DonorResponseBetaAdapter extends RecyclerView.Adapter<DonorResponse
 
             @Override
             public void onFailure(Call<ImageDataModel> call, Throwable t) {
-                ToastCreator.toastCreatorRed(context, "Profile Image retrieve failed. " + t.getMessage());
 
 
-                if (loggedInUserGender.toLowerCase().equals("male")) {
+                if (gender.toLowerCase().equals("male")) {
                     genderImageView.setImageResource(R.drawable.profile_icon_male);
-                } else if (loggedInUserGender.toLowerCase().equals("female")) {
+                } else if (gender.toLowerCase().equals("female")) {
                     genderImageView.setImageResource(R.drawable.profile_icon_female);
                 }
             }

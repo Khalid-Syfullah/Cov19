@@ -7,7 +7,8 @@
     tools:context=".UpdateUserProfileActivity">
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:background="#FAFAFA">
 
 
         <ImageView
@@ -30,7 +31,7 @@
             android:fontFamily="@font/montserrat_bold"
 
 
-            android:text="@string/update_heading_textview"
+            android:text="@string/update_profile"
             android:textColor="@color/textColorDark"
             android:textSize="18sp"
             app:layout_constraintBottom_toBottomOf="@+id/update_back_button"
@@ -47,7 +48,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
             android:fontFamily="@font/montserrat_bold"
-            android:text="@string/update_label_name"
+            android:text="@string/label_name"
             android:textColor="@color/textColorDark"
             android:textSize="16sp"
             app:layout_constraintEnd_toEndOf="@+id/update_name_edittext"
@@ -64,7 +65,7 @@
             android:background="@drawable/edit_text_dark"
             android:fontFamily="@font/montserrat"
 
-            android:hint="@string/update_name_edittext"
+            android:hint="@string/enter_name_hint"
             android:paddingStart="25dp"
             android:paddingTop="10dp"
             android:paddingEnd="20dp"
@@ -83,7 +84,7 @@
 
             android:layout_marginTop="16dp"
             android:fontFamily="@font/montserrat_bold"
-            android:text="@string/update_label_spinner_division"
+            android:text="@string/label_division"
             android:textColor="@color/textColorDark"
             android:textSize="16sp"
             app:layout_constraintEnd_toEndOf="@+id/update_age_edittext"
@@ -113,7 +114,7 @@
 
             android:layout_marginTop="16dp"
             android:fontFamily="@font/montserrat_bold"
-            android:text="@string/update_label_spinner_district"
+            android:text="@string/label_district"
 
             android:textColor="@color/textColorDark"
             android:textSize="16sp"
@@ -144,7 +145,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:fontFamily="@font/montserrat_bold"
-            android:text="@string/update_label_thana"
+            android:text="@string/label_thana"
             android:textColor="@color/textColorDark"
             android:textSize="16sp"
             app:layout_constraintEnd_toEndOf="@+id/update_district_spinner"
@@ -152,19 +153,21 @@
             app:layout_constraintStart_toStartOf="@+id/update_district_spinner"
             app:layout_constraintTop_toBottomOf="@+id/update_district_spinner" />
 
-        <EditText
-            android:id="@+id/update_thana_edittext"
+        <Spinner
+            android:id="@+id/update_thana_spinner"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginStart="32dp"
             android:layout_marginTop="8dp"
             android:layout_marginEnd="32dp"
+            style="@style/Widget.AppCompat.Spinner.Underlined"
 
-            android:background="@drawable/edit_text_dark"
-            android:fontFamily="@font/raleway_bold"
-            android:hint="@string/update_thana_edittext"
-            android:minHeight="40dp"
-            android:padding="15dp"
+            android:minHeight="50dp"
+
+            android:fontFamily="@font/montserrat"
+
+
+
             android:textSize="12sp"
             app:layout_constraintEnd_toEndOf="@+id/update_label_thana"
             app:layout_constraintStart_toStartOf="@+id/update_label_thana"
@@ -178,7 +181,7 @@
 
             android:layout_marginTop="16dp"
             android:fontFamily="@font/montserrat_bold"
-            android:text="@string/update_label_age"
+            android:text="@string/label_age_1"
             android:textColor="@color/textColorDark"
             android:textSize="16sp"
             app:layout_constraintEnd_toEndOf="@+id/update_name_edittext"
@@ -195,7 +198,7 @@
             android:layout_marginEnd="32dp"
             android:background="@drawable/edit_text_dark"
             android:fontFamily="@font/raleway_bold"
-            android:hint="@string/update_age_edittext"
+            android:hint="@string/enter_age_hint"
             android:inputType="number"
             android:maxLength="2"
             android:minHeight="40dp"
@@ -207,16 +210,18 @@
 
         <TextView
             android:id="@+id/update_label_donor_role"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="24dp"
             android:fontFamily="@font/montserrat_bold"
             android:text="@string/label_donor_role"
 
             android:textColor="@color/textColorDark"
             android:textSize="16sp"
-            app:layout_constraintStart_toStartOf="@+id/update_thana_edittext"
-            app:layout_constraintTop_toBottomOf="@+id/update_thana_edittext" />
+            app:layout_constraintEnd_toEndOf="@+id/update_thana_spinner"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="@+id/update_thana_spinner"
+            app:layout_constraintTop_toBottomOf="@+id/update_thana_spinner" />
 
         <RadioGroup
             android:id="@+id/update_donor_role_radio_group"
@@ -272,7 +277,7 @@
             android:fontFamily="@font/montserrat_bold"
             android:maxWidth="350dp"
             android:minWidth="320dp"
-            android:text="@string/update_update_btn"
+            android:text="@string/update_profile"
             android:textColor="#ffffff"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="@+id/update_age_edittext"

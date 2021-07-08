@@ -2,74 +2,71 @@ package com.ece.cov19;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.graphics.Color;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.DisplayMetrics;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-
 import com.ece.cov19.DataModels.UserDataModel;
-import com.ece.cov19.Functions.ToastCreator;
+import com.ece.cov19.Functions.LoginUser;
 import com.ece.cov19.RetroServices.RetroInstance;
 import com.ece.cov19.RetroServices.RetroInterface;
-
 import java.util.Locale;
-
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-
-import static com.ece.cov19.DataModels.LoggedInUserData.loggedInUserAge;
-import static com.ece.cov19.DataModels.LoggedInUserData.loggedInUserBloodGroup;
-import static com.ece.cov19.DataModels.LoggedInUserData.loggedInUserDistrict;
-import static com.ece.cov19.DataModels.LoggedInUserData.loggedInUserDivision;
-import static com.ece.cov19.DataModels.LoggedInUserData.loggedInUserDonorInfo;
-import static com.ece.cov19.DataModels.LoggedInUserData.loggedInUserGender;
-import static com.ece.cov19.DataModels.LoggedInUserData.loggedInUserName;
-import static com.ece.cov19.DataModels.LoggedInUserData.loggedInUserPass;
-import static com.ece.cov19.DataModels.LoggedInUserData.loggedInUserPhone;
-import static com.ece.cov19.DataModels.LoggedInUserData.loggedInUserThana;
 import static com.ece.cov19.LoginActivity.LOGIN_SHARED_PREFS;
 import static com.ece.cov19.LoginActivity.LOGIN_USER_PASS;
 import static com.ece.cov19.LoginActivity.LOGIN_USER_PHONE;
 
 public class SplashActivity extends AppCompatActivity {
 
-    ProgressBar progressBar;
+    public static Button tryAgain;
+    public static ProgressBar progressBar;
     SharedPreferences langPrefs;
     String lang="not set";
     public static final String Language_pref="Language";
     public static final String Selected_language="Selected Language";
+    String currentVersion, latestVersion;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_splash);
 
-        progressBar = findViewById(R.id.splash_progress_bar);
-        final Handler handler = new Handler();
 
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-              langPrefs=getSharedPreferences(Language_pref,MODE_PRIVATE);
-                if(langPrefs.contains(Selected_language)){
-                    setLocale(langPrefs.getString(Selected_language,""));
 
-                }else {
-                    languageAlertDialog();
-                }
-            }
-        },1000);
     }
+
+    @Override
+    protected void onResume(){
+        super.onResume();
+
+        progressBar = findViewById(R.id.splash_progress_bar);
+        tryAgain = findViewById(R.id.splash_retry);
+
+        checkForUpdate();
+
+        tryAgain.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                checkForUpdate();
+            }
+        });
+    }
+
 
     private void setLocale(String selected_language) {
         Locale myLocale = new Locale(selected_language);
@@ -149,56 +146,7 @@ public class SplashActivity extends AppCompatActivity {
           phone = sharedPreferences.getString(LOGIN_USER_PHONE, "");
           password= sharedPreferences.getString(LOGIN_USER_PASS, "");
 
-            RetroInterface retroInterface = RetroInstance.getRetro();
-            Call<UserDataModel> sendingData = retroInterface.loginRetroMethod(phone, password);
-            sendingData.enqueue(new Callback<UserDataModel>() {
-                @Override
-                public void onResponse(Call<UserDataModel> call, Response<UserDataModel> response) {
-                    if (response.body().getServerMsg().equals("Success")) {
-
-                        progressBar.setVisibility(View.GONE);
-
-
-
-//              setting all logged in info
-                        loggedInUserName = response.body().getName();
-                        loggedInUserPhone = response.body().getPhone();
-                        loggedInUserGender = response.body().getGender();
-                        loggedInUserBloodGroup = response.body().getBloodGroup();
-                        loggedInUserDivision = response.body().getDivision();
-                        loggedInUserDistrict = response.body().getDistrict();
-                        loggedInUserThana = response.body().getThana();
-                        loggedInUserAge = response.body().getAge();
-                        loggedInUserDonorInfo = response.body().getDonor();
-                        loggedInUserPass = response.body().getPassword();
-                        ToastCreator.toastCreatorGreen(SplashActivity.this,getResources().getString(R.string.welcome)+" " + loggedInUserName);
-
-
-//                  going to Dashboard
-                        Intent intent = new Intent(SplashActivity.this, DashboardActivity.class);
-                        startActivity(intent);
-                        finish();
-                    } else {
-                        ToastCreator.toastCreatorRed(SplashActivity.this, response.body().getServerMsg());
-
-//                   going to Login
-                        Intent intent = new Intent(SplashActivity.this, LoginActivity.class);
-                        startActivity(intent);
-                        finish();
-
-                    }
-
-                }
-
-                @Override
-                public void onFailure(Call<UserDataModel> call, Throwable t) {
-                    
-                    ToastCreator.toastCreatorRed(SplashActivity.this,getResources().getString(R.string.connection_error));
-
-                }
-            });
-
-
+            LoginUser.loginUser(this,phone,password,DashboardActivity.class);
         } else {
             Intent login = new Intent(SplashActivity.this, LoginActivity.class);
             startActivity(login);
@@ -206,6 +154,107 @@ public class SplashActivity extends AppCompatActivity {
         }
 
 
+
+    }
+
+    private void checkForUpdate(){
+        RetroInterface retroInterface = RetroInstance.getRetro();
+        Call<UserDataModel> versionCheck = retroInterface.latestVersion();
+        versionCheck.enqueue(new Callback<UserDataModel>() {
+            @Override
+            public void onResponse(Call<UserDataModel> call, Response<UserDataModel> response) {
+
+                if(response.body().getServerMsg() != null) {
+                    latestVersion = response.body().getServerMsg();
+                    currentVersion = getCurrentVersion();
+                    if (!currentVersion.equals(latestVersion)){
+                        showUpdateDialog();
+                    }
+                    else{
+                        checkSharedPref();
+                    }
+
+                }
+
+            }
+
+            @Override
+            public void onFailure(Call<UserDataModel> call, Throwable t) {
+                progressBar.setVisibility(View.GONE);
+                tryAgain.setVisibility(View.VISIBLE);
+            }
+        });
+    }
+
+    private String getCurrentVersion(){
+        PackageManager pm = this.getPackageManager();
+        PackageInfo pInfo = null;
+        String ver;
+        try {
+            pInfo =  pm.getPackageInfo(this.getPackageName(),0);
+
+        } catch (PackageManager.NameNotFoundException e1) {
+            // TODO Auto-generated catch block
+            e1.printStackTrace();
+        }
+        ver = pInfo.versionName;
+
+        return ver;
+
+    }
+
+
+
+    private void checkSharedPref(){
+        final Handler handler = new Handler();
+
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                langPrefs = getSharedPreferences(Language_pref, MODE_PRIVATE);
+                if (langPrefs.contains(Selected_language)) {
+                    setLocale(langPrefs.getString(Selected_language, ""));
+
+                } else {
+                    languageAlertDialog();
+                }
+            }
+        }, 1000);
+
+    }
+
+    private void showUpdateDialog(){
+        final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+
+        LayoutInflater inflater=LayoutInflater.from(this);
+        View langDialogView=  inflater.inflate(R.layout.update_dialog,null);
+        TextView exit=langDialogView.findViewById(R.id.update_dialog_exit);
+        TextView update=langDialogView.findViewById(R.id.update_dialog_update);
+        builder.setCancelable(false);
+        builder.setView(langDialogView);
+
+        AlertDialog alertDialog=builder.create();
+        alertDialog.show();
+        exit.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                    finishAffinity();
+            }
+        });
+        update.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Uri uri =  Uri.parse("http://play.google.com/store/apps/details?id=" + getApplicationContext().getPackageName());
+                Intent goToMarket = new Intent(Intent.ACTION_VIEW, uri);
+                goToMarket.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY |
+                        Intent.FLAG_ACTIVITY_NEW_DOCUMENT |
+                        Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
+                startActivity(goToMarket);
+
+
+            }
+        });
 
     }
 }

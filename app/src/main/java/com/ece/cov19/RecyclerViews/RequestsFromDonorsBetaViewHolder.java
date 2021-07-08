@@ -10,13 +10,14 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.ece.cov19.DataModels.UserDataModel;
+import com.ece.cov19.Functions.ClickTimeChecker;
 import com.ece.cov19.R;
 import com.ece.cov19.ViewDonorProfileActivity;
 
 import java.util.ArrayList;
 
 
-public class PatientRequestsBetaViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
+public class RequestsFromDonorsBetaViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
 
     TextView nameTextView, locationTextView, bloodTextView,donorType, acceptButton, declineButton;
     ImageView donorImageView, locationImageView;
@@ -24,7 +25,7 @@ public class PatientRequestsBetaViewHolder extends RecyclerView.ViewHolder imple
     ArrayList<UserDataModel> userDataModels;
     int pos;
 
-    public PatientRequestsBetaViewHolder(@NonNull View itemView, ArrayList<UserDataModel> userDataModels) {
+    public RequestsFromDonorsBetaViewHolder(@NonNull View itemView, ArrayList<UserDataModel> userDataModels) {
         super(itemView);
         this.userDataModels = userDataModels;
         nameTextView = itemView.findViewById(R.id.request_donor_name);
@@ -38,7 +39,7 @@ public class PatientRequestsBetaViewHolder extends RecyclerView.ViewHolder imple
 
         //itemView.setOnClickListener(this);
         acceptButton.setVisibility(View.VISIBLE);
-        acceptButton.setText("View Profile");
+        acceptButton.setText(R.string.view_profile);
         declineButton.setVisibility(View.GONE);
 
 
@@ -49,25 +50,26 @@ public class PatientRequestsBetaViewHolder extends RecyclerView.ViewHolder imple
 
     @Override
     public void onClick(View view) {
+        if (ClickTimeChecker.clickTimeChecker()) {
+            pos = getAdapterPosition();
+            Context c = view.getContext();
 
-                pos = getAdapterPosition();
-                Context c = view.getContext();
+            userDataModel = userDataModels.get(pos);
 
-                userDataModel = userDataModels.get(pos);
+            Intent intent = new Intent(view.getContext(), ViewDonorProfileActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
-                Intent intent = new Intent(view.getContext(), ViewDonorProfileActivity.class);
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            intent.putExtra("name", userDataModel.getName());
+            intent.putExtra("phone", userDataModel.getPhone());
+            intent.putExtra("blood", userDataModel.getBloodGroup());
+            intent.putExtra("address", userDataModel.getThana() + ", " + userDataModel.getDistrict());
+            intent.putExtra("age", userDataModel.getAge());
+            intent.putExtra("donorinfo", userDataModel.getDonor());
+            intent.putExtra("gender", userDataModel.getGender());
+            intent.putExtra("activity", "RequestsFromDonorsActivity");
 
-                intent.putExtra("name", userDataModel.getName());
-                intent.putExtra("phone", userDataModel.getPhone());
-                intent.putExtra("blood", userDataModel.getBloodGroup());
-                intent.putExtra("address", userDataModel.getThana() + ", " + userDataModel.getDistrict());
-                intent.putExtra("age", userDataModel.getAge());
-                intent.putExtra("donorinfo", userDataModel.getDonor());
-                intent.putExtra("gender", userDataModel.getGender());
-                intent.putExtra("activity", "PatientRequestsActivity");
+            c.startActivity(intent);
 
-                c.startActivity(intent);
-
+        }
     }
 }

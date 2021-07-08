@@ -1,5 +1,7 @@
 package com.ece.cov19;
 
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
@@ -12,6 +14,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.ece.cov19.DataModels.PatientDataModel;
+import com.ece.cov19.Functions.LoginUser;
 import com.ece.cov19.Functions.ToastCreator;
 import com.ece.cov19.RecyclerViews.MyPatientsAdapter;
 import com.ece.cov19.RetroServices.RetroInstance;
@@ -25,10 +28,15 @@ import retrofit2.Response;
 
 import static com.ece.cov19.DataModels.FindPatientData.findPatientAge;
 import static com.ece.cov19.DataModels.FindPatientData.findPatientBloodGroup;
+import static com.ece.cov19.DataModels.FindPatientData.findPatientDistrict;
+import static com.ece.cov19.DataModels.FindPatientData.findPatientDivision;
 import static com.ece.cov19.DataModels.FindPatientData.findPatientName;
 import static com.ece.cov19.DataModels.FindPatientData.findPatientNeed;
 import static com.ece.cov19.DataModels.FindPatientData.findPatientPhone;
 import static com.ece.cov19.DataModels.LoggedInUserData.loggedInUserPhone;
+import static com.ece.cov19.LoginActivity.LOGIN_SHARED_PREFS;
+import static com.ece.cov19.LoginActivity.LOGIN_USER_PASS;
+import static com.ece.cov19.LoginActivity.LOGIN_USER_PHONE;
 
 public class MyPatientsActivity extends AppCompatActivity {
 
@@ -49,6 +57,8 @@ public class MyPatientsActivity extends AppCompatActivity {
         findPatientAge="";
         findPatientPhone="";
         findPatientBloodGroup="any";
+        findPatientDistrict="";
+        findPatientDivision="";
         findPatientNeed="";
 
         myPatientsRecyclerView = findViewById(R.id.my_patients_recyclerview);
@@ -66,7 +76,17 @@ public class MyPatientsActivity extends AppCompatActivity {
         backbtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                finish();
+                Intent intent = getIntent();
+                String status = intent.getStringExtra("notification");
+
+                if(status == null){
+                    finish();
+                }
+                else if(status.equals("yes")){
+                    Intent goBackIntent = new Intent(getApplicationContext(), DashboardActivity.class);
+                    startActivity(goBackIntent);
+                    finish();
+                }
             }
         });
 
@@ -82,7 +102,23 @@ public class MyPatientsActivity extends AppCompatActivity {
         findPatientPhone="";
         findPatientBloodGroup="any";
         findPatientNeed="";
+        if(LoginUser.checkLoginStat().equals("failed")){
+            SharedPreferences sharedPreferences = getSharedPreferences(LOGIN_SHARED_PREFS, MODE_PRIVATE);
+            String phone,password;
 
+            if (sharedPreferences.contains(LOGIN_USER_PHONE) && sharedPreferences.contains(LOGIN_USER_PASS)) {
+                phone = sharedPreferences.getString(LOGIN_USER_PHONE, "");
+                password= sharedPreferences.getString(LOGIN_USER_PASS, "");
+
+                LoginUser.loginUser(this,phone,password,MyPatientsActivity.class);
+            }
+            else {
+                ToastCreator.toastCreatorRed(this,getString(R.string.login_failed));
+                Intent intent=new Intent(this,LoginActivity.class);
+                startActivity(intent);
+                finish();
+            }
+        }
         myPatientsRecyclerView = findViewById(R.id.my_patients_recyclerview);
         myPatientsProgressBar = findViewById(R.id.my_patients_progress_bar);
         myPatientsTextView = findViewById(R.id.my_patients_textview);
@@ -100,7 +136,18 @@ public class MyPatientsActivity extends AppCompatActivity {
         backbtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                finish();
+
+                Intent intent = getIntent();
+                String status = intent.getStringExtra("notification");
+
+                if(status == null){
+                    finish();
+                }
+                else if(status.equals("yes")){
+                    Intent goBackIntent = new Intent(getApplicationContext(), DashboardActivity.class);
+                    startActivity(goBackIntent);
+                    finish();
+                }
             }
         });
     }
@@ -109,8 +156,17 @@ public class MyPatientsActivity extends AppCompatActivity {
     public void onBackPressed() {
         super.onBackPressed();
 
-        finish();
-    }
+        Intent intent = getIntent();
+        String status = intent.getStringExtra("notification");
+
+        if(status == null){
+            finish();
+        }
+        else if(status.equals("yes")){
+            Intent goBackIntent = new Intent(getApplicationContext(), DashboardActivity.class);
+            startActivity(goBackIntent);
+            finish();
+        }    }
 
     private void myPatientsSearch(){
         myPatientsProgressBar.setVisibility(View.VISIBLE);
@@ -156,7 +212,8 @@ public class MyPatientsActivity extends AppCompatActivity {
                 }
 
                 else{
-                    ToastCreator.toastCreatorRed(MyPatientsActivity.this,"No Response");
+                    myPatientsProgressBar.setVisibility(View.GONE);
+                    ToastCreator.toastCreatorRed(MyPatientsActivity.this,getResources().getString(R.string.connection_failed_try_again));
 
 
                 }
@@ -164,7 +221,8 @@ public class MyPatientsActivity extends AppCompatActivity {
 
             @Override
             public void onFailure(Call<ArrayList<PatientDataModel>> call, Throwable t) {
-                ToastCreator.toastCreatorRed(MyPatientsActivity.this,"Error : " +t.getMessage());
+                myPatientsProgressBar.setVisibility(View.GONE);
+                ToastCreator.toastCreatorRed(MyPatientsActivity.this,getResources().getString(R.string.connection_error));
             }
         });
 

@@ -4,10 +4,13 @@ package com.ece.cov19;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -53,6 +56,7 @@ public class PhoneVerificationActivity2 extends AppCompatActivity {
     private Button button;
     private EditText editText;
     private ImageView backButton;
+    private ProgressBar progressBar;
     String verification, phonenumber;
 
 
@@ -65,6 +69,7 @@ public class PhoneVerificationActivity2 extends AppCompatActivity {
         editText = findViewById(R.id.phn_ver2_otp);
         button = findViewById(R.id.phn_ver2_otp_button);
         backButton = findViewById(R.id.phn_ver2_back_button);
+        progressBar = findViewById(R.id.phn_ver2_progress_bar);
         mAuth = FirebaseAuth.getInstance();
 
         Intent intent = getIntent();
@@ -85,6 +90,7 @@ public class PhoneVerificationActivity2 extends AppCompatActivity {
                     return;
                 }
                 verifyCode(code);
+                progressBar.setVisibility(View.VISIBLE);
             }
         });
 
@@ -95,6 +101,23 @@ public class PhoneVerificationActivity2 extends AppCompatActivity {
             }
         });
 
+        editText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                progressBar.setVisibility(View.GONE);
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+
+            }
+        });
     }
 
     @Override
@@ -109,26 +132,27 @@ public class PhoneVerificationActivity2 extends AppCompatActivity {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if (task.isSuccessful()) {
-                            if(verification.equals("signup")) {
+                            if(verification.toLowerCase().equals("signup")) {
                                 Intent intent = new Intent(PhoneVerificationActivity2.this, RegistrationActivity.class);
                                 intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                                 intent.putExtra("phone", phonenumber);
-                                ToastCreator.toastCreatorGreen(PhoneVerificationActivity2.this, "Verification Successful!");
+                                ToastCreator.toastCreatorGreen(PhoneVerificationActivity2.this, getResources().getString(R.string.phn_ver_activity_verification_success));
                                 startActivity(intent);
                                 finish();
                             }
 
-                            else if(verification.equals("forgotpass")){
+                            else if(verification.toLowerCase().equals("forgotpass")){
                                 Intent intent = new Intent(PhoneVerificationActivity2.this, UpdatePasswordActivity.class);
                                 intent.putExtra("phone", phonenumber);
                                 intent.putExtra("verification", verification);
-                                ToastCreator.toastCreatorGreen(PhoneVerificationActivity2.this, "Verification Successful!");
+                                ToastCreator.toastCreatorGreen(PhoneVerificationActivity2.this, getResources().getString(R.string.phn_ver_activity_verification_success));
                                 startActivity(intent);
                                 finish();
                             }
 
                         } else {
-                            ToastCreator.toastCreatorRed(PhoneVerificationActivity2.this, "Verification Failed! Error: "+task.getException().getMessage());
+                            progressBar.setVisibility(View.GONE);
+                            ToastCreator.toastCreatorRed(PhoneVerificationActivity2.this, getResources().getString(R.string.phn_ver_activity_verification_failed));
                         }
                     }
                 });
@@ -155,6 +179,7 @@ public class PhoneVerificationActivity2 extends AppCompatActivity {
         public void onCodeSent(String s, PhoneAuthProvider.ForceResendingToken forceResendingToken) {
             super.onCodeSent(s, forceResendingToken);
             verificationId = s;
+            progressBar.setVisibility(View.VISIBLE);
         }
 
         @Override
@@ -163,13 +188,15 @@ public class PhoneVerificationActivity2 extends AppCompatActivity {
             if (code != null) {
                 editText.setText(code);
                 verifyCode(code);
-                ToastCreator.toastCreatorGreen(PhoneVerificationActivity2.this, "Verification Successful!");
+                progressBar.setVisibility(View.GONE);
+                ToastCreator.toastCreatorGreen(PhoneVerificationActivity2.this, getResources().getString(R.string.phn_ver_activity_verification_success));
             }
         }
 
         @Override
         public void onVerificationFailed(FirebaseException e) {
-            ToastCreator.toastCreatorRed(PhoneVerificationActivity2.this, "Automatic Verification Failed! Error: "+e.getMessage());
+            progressBar.setVisibility(View.GONE);
+            ToastCreator.toastCreatorRed(PhoneVerificationActivity2.this, getResources().getString(R.string.phn_ver_activity_verification_failed));
         }
     };
 

@@ -6,6 +6,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -21,6 +22,7 @@ import com.ece.cov19.DataModels.DashBoardNumberModel;
 import com.ece.cov19.DataModels.FindPatientData;
 import com.ece.cov19.DataModels.PatientDataModel;
 import com.ece.cov19.DataModels.UserDataModel;
+import com.ece.cov19.Functions.LoginUser;
 import com.ece.cov19.Functions.ToastCreator;
 import com.ece.cov19.RecyclerViews.FindDonorBetaAdapter;
 import com.ece.cov19.RecyclerViews.FindDonorAlphaAdapter;
@@ -35,10 +37,17 @@ import retrofit2.Response;
 
 import static com.ece.cov19.DataModels.FindPatientData.findPatientAge;
 import static com.ece.cov19.DataModels.FindPatientData.findPatientBloodGroup;
+import static com.ece.cov19.DataModels.FindPatientData.findPatientDistrict;
+import static com.ece.cov19.DataModels.FindPatientData.findPatientDivision;
 import static com.ece.cov19.DataModels.FindPatientData.findPatientName;
 import static com.ece.cov19.DataModels.FindPatientData.findPatientNeed;
 import static com.ece.cov19.DataModels.FindPatientData.findPatientPhone;
+import static com.ece.cov19.DataModels.LoggedInUserData.loggedInUserDistrict;
+import static com.ece.cov19.DataModels.LoggedInUserData.loggedInUserDivision;
 import static com.ece.cov19.DataModels.LoggedInUserData.loggedInUserPhone;
+import static com.ece.cov19.LoginActivity.LOGIN_SHARED_PREFS;
+import static com.ece.cov19.LoginActivity.LOGIN_USER_PASS;
+import static com.ece.cov19.LoginActivity.LOGIN_USER_PHONE;
 
 public class FindDonorActivity extends AppCompatActivity {
 
@@ -58,6 +67,13 @@ public class FindDonorActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_find_donor);
+        findPatientName="";
+        findPatientAge="";
+        findPatientPhone="";
+        findPatientBloodGroup="any";
+        findPatientDistrict="";
+        findPatientDivision="";
+        findPatientNeed="";
 
         addPatientCardView = findViewById(R.id.add_patient_cardView);
         numberOfPatients = findViewById(R.id.find_donor_number_of_patients);
@@ -76,11 +92,6 @@ public class FindDonorActivity extends AppCompatActivity {
         donorProgressBar =findViewById(R.id.find_donor_fordonors_progress_bar);
         backbtn=findViewById(R.id.find_donor_fordonors_back_button);
 
-        findPatientName="";
-        findPatientAge="";
-        findPatientPhone="";
-        findPatientBloodGroup="any";
-
         myPatients=patientTextView.getText().toString();
         availableDonors=donorTextView.getText().toString();
 
@@ -90,7 +101,6 @@ public class FindDonorActivity extends AppCompatActivity {
 
 
 
-        FindPatientData.findPatientBloodGroup = "any";
         findPatient();
         findDonor();
 
@@ -148,7 +158,26 @@ public class FindDonorActivity extends AppCompatActivity {
         findPatientAge="";
         findPatientPhone="";
         findPatientBloodGroup="any";
+        findPatientDistrict="";
+        findPatientDivision="";
+        findPatientNeed="";
+        if(LoginUser.checkLoginStat().equals("failed")){
+            SharedPreferences sharedPreferences = getSharedPreferences(LOGIN_SHARED_PREFS, MODE_PRIVATE);
+            String phone,password;
 
+            if (sharedPreferences.contains(LOGIN_USER_PHONE) && sharedPreferences.contains(LOGIN_USER_PASS)) {
+                phone = sharedPreferences.getString(LOGIN_USER_PHONE, "");
+                password= sharedPreferences.getString(LOGIN_USER_PASS, "");
+
+                LoginUser.loginUser(this,phone,password,FindDonorActivity.class);
+            }
+            else {
+                ToastCreator.toastCreatorRed(this,getString(R.string.login_failed));
+                Intent intent=new Intent(this,LoginActivity.class);
+                startActivity(intent);
+                finish();
+            }
+        }
         myPatients=patientTextView.getText().toString();
         availableDonors=donorTextView.getText().toString();
 
@@ -200,7 +229,6 @@ public class FindDonorActivity extends AppCompatActivity {
     @Override
     public void onBackPressed() {
         super.onBackPressed();
-
         finish();
     }
 
@@ -254,14 +282,14 @@ public class FindDonorActivity extends AppCompatActivity {
                 }
 
                 else{
-                    ToastCreator.toastCreatorRed(FindDonorActivity.this,"No Response");
+                    patientProgressBar.setVisibility(View.GONE);
 
                 }
             }
 
             @Override
             public void onFailure(Call<ArrayList<PatientDataModel>> call, Throwable t) {
-                ToastCreator.toastCreatorRed(FindDonorActivity.this,"Error : " +t.getMessage());
+                patientProgressBar.setVisibility(View.GONE);
             }
         });
 
@@ -294,7 +322,7 @@ public class FindDonorActivity extends AppCompatActivity {
 
         userDataModels.clear();
         RetroInterface retroInterface = RetroInstance.getRetro();
-        Call<ArrayList<UserDataModel>> findDonor = retroInterface.findDonor(bloodGroup,district,loggedInUserPhone);
+        Call<ArrayList<UserDataModel>> findDonor = retroInterface.findDonor(bloodGroup,district,loggedInUserPhone,findPatientDistrict,findPatientDivision);
         findDonor.enqueue(new Callback<ArrayList<UserDataModel>>() {
             @Override
             public void onResponse(Call<ArrayList<UserDataModel>> call, Response<ArrayList<UserDataModel>> response) {
@@ -304,20 +332,26 @@ public class FindDonorActivity extends AppCompatActivity {
 
                 if(response.isSuccessful()){
                     ArrayList<UserDataModel> initialModels = response.body();
-                    donorTextView.setText(availableDonors+ " (" +initialModels.size()+ ")");
+
 
                     if(initialModels.size() == 0){
                         noMatchTextView.setVisibility(View.VISIBLE);
                     }
+                    else {
+                        noMatchTextView.setVisibility(View.GONE);
+                    }
                     for(UserDataModel initialDataModel : initialModels){
-                        if(findPatientNeed.equals("Plasma")){
-                            if(initialDataModel.getDonor().equals("Plasma")){
+                        if(findPatientNeed.toLowerCase().equals("plasma")){
+                            if(initialDataModel.getDonor().toLowerCase().equals("plasma")|| initialDataModel.getDonor().toLowerCase().equals("blood and plasma")){
                                 userDataModels.add(initialDataModel);
                             }
                         }
                         else {
+                            if(initialDataModel.getDonor().toLowerCase().equals("blood")|| initialDataModel.getDonor().toLowerCase().equals("blood and plasma")) {
 
-                            userDataModels.add(initialDataModel);
+
+                                userDataModels.add(initialDataModel);
+                            }
                         }
 
 
@@ -329,6 +363,9 @@ public class FindDonorActivity extends AppCompatActivity {
                         districtEditText.setVisibility(View.GONE);
                         noMatchTextView.setVisibility(View.VISIBLE);
                     }
+                    else {
+                        donorTextView.setText(availableDonors+ " (" +userDataModels.size()+ ")");
+                    }
 
                     donorRecyclerView.setAdapter(findDonorBetaAdapter);
                     LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getApplicationContext());
@@ -336,15 +373,16 @@ public class FindDonorActivity extends AppCompatActivity {
                 }
 
                 else{
-
-                    ToastCreator.toastCreatorRed(FindDonorActivity.this,"No Response");
+                    donorProgressBar.setVisibility(View.GONE);
+                    ToastCreator.toastCreatorRed(FindDonorActivity.this,getResources().getString(R.string.connection_failed_try_again));
 
                 }
             }
 
             @Override
             public void onFailure(Call<ArrayList<UserDataModel>> call, Throwable t) {
-                ToastCreator.toastCreatorRed(FindDonorActivity.this,"Error : " +t.getMessage());
+                donorProgressBar.setVisibility(View.GONE);
+                ToastCreator.toastCreatorRed(FindDonorActivity.this,getResources().getString(R.string.connection_error));
             }
         });
     }

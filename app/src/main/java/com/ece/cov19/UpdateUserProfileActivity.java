@@ -40,9 +40,9 @@ import static com.ece.cov19.DataModels.LoggedInUserData.loggedInUserThana;
 
 public class UpdateUserProfileActivity extends AppCompatActivity {
 
-    private EditText nameEditText, thanaEditText, ageEditText;
+    private EditText nameEditText, ageEditText;
     private RadioGroup bloodRadioGroup;
-    private Spinner divisionSpinner, districtSpinner;
+    private Spinner divisionSpinner, districtSpinner,thanaSpinner;
     private String donorInfo;
     private ImageView backbtn;
     private boolean dischanged=false;
@@ -56,7 +56,7 @@ public class UpdateUserProfileActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_update_user_profile);
         nameEditText = findViewById(R.id.update_name_edittext);
-        thanaEditText = findViewById(R.id.update_thana_edittext);
+        thanaSpinner = findViewById(R.id.update_thana_spinner);
         ageEditText = findViewById(R.id.update_age_edittext);
 
         divisionSpinner = findViewById(R.id.update_division_spinner);
@@ -73,7 +73,7 @@ public class UpdateUserProfileActivity extends AppCompatActivity {
 
 //     setting up current data
         nameEditText.setText(loggedInUserName);
-        thanaEditText.setText(loggedInUserThana);
+
         ageEditText.setText(loggedInUserAge);
         ArrayAdapter arrayAdapter = (ArrayAdapter) divisionSpinner.getAdapter();
 
@@ -82,12 +82,12 @@ public class UpdateUserProfileActivity extends AppCompatActivity {
 
 //       setting donor info radio button
         int index;
-        if (loggedInUserDonorInfo.equals("Blood")) {
+        if (loggedInUserDonorInfo.toLowerCase().equals("blood")) {
             index = 0;
-        } else if (loggedInUserDonorInfo.equals("Plasma")) {
+        } else if (loggedInUserDonorInfo.toLowerCase().equals("plasma")) {
             index = 1;
         }
-        else if(loggedInUserDonorInfo.equals("Blood and Plasma")){
+        else if(loggedInUserDonorInfo.toLowerCase().equals("blood and plasma")){
             index=2;
         }
 
@@ -108,6 +108,7 @@ public class UpdateUserProfileActivity extends AppCompatActivity {
                         if (radioButton.isChecked()) {
 
                             final AlertDialog.Builder builder = new AlertDialog.Builder(UpdateUserProfileActivity.this);
+                            builder.setCancelable(false);
 
                             LayoutInflater inflater = LayoutInflater.from(UpdateUserProfileActivity.this);
                             View plasmaDialog = inflater.inflate(R.layout.plasma_dialog_new, null);
@@ -164,24 +165,24 @@ public class UpdateUserProfileActivity extends AppCompatActivity {
 
 
                                             if(q4.getCheckedRadioButtonId()==-1){
-                                                q4Txt.setError("Answer this question");
+                                                q4Txt.setError(getString(R.string.answer_this_question_error));
                                                 q4Txt.requestFocus();
                                             }
 
                                             if (q3.getCheckedRadioButtonId()==-1){
-                                                q3Txt.setError("Answer this question");
+                                                q3Txt.setError(getString(R.string.answer_this_question_error));
                                                 q3Txt.requestFocus();
 
                                             }
 
                                             if(q2.getCheckedRadioButtonId()==-1){
-                                                q2Txt.setError("Answer this question");
+                                                q2Txt.setError(getString(R.string.answer_this_question_error));
                                                 q2Txt.requestFocus();
 
                                             }
 
                                             if(q1.getCheckedRadioButtonId()==-1){
-                                                q1Txt.setError("Answer this question");
+                                                q1Txt.setError(getString(R.string.answer_this_question_error));
                                                 q1Txt.requestFocus();
                                             }
 
@@ -207,7 +208,7 @@ public class UpdateUserProfileActivity extends AppCompatActivity {
 
                                     if(q1_yes.isChecked() && q2_greater.isChecked() && q3_greater.isChecked() && q4_no.isChecked()){
                                         eligible = true;
-                                        eligibility.setText("You are eligible to Donate");
+                                        eligibility.setText(getResources().getString(R.string.plasma_eligible));
                                     }
                                 }
 
@@ -262,10 +263,29 @@ public class UpdateUserProfileActivity extends AppCompatActivity {
             }
         });
 
+        districtSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int position, long l) {
+                int i= getResources().getIdentifier(districtSpinner.getSelectedItem().toString()+"_t","array",getPackageName());
+                ArrayAdapter<String> adpter = new ArrayAdapter<String>(
+                        UpdateUserProfileActivity.this,
+                        android.R.layout.simple_spinner_dropdown_item,
+                        getResources().getStringArray(i));
+                thanaSpinner.setAdapter(adpter);
+                thanaSpinner.setSelection(adpter.getPosition(loggedInUserThana));
+
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+
+            }
+        });
 // all current data set
         updateBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                updateBtn.setEnabled(false);
                 updateAlertDialog();
             }
         });
@@ -278,23 +298,24 @@ public class UpdateUserProfileActivity extends AppCompatActivity {
         String name,  division, district, thana, age, emptyfield="";
         Boolean emptyfieldChecker=true;
         name = nameEditText.getText().toString();
-        thana = thanaEditText.getText().toString();
+        thana = thanaSpinner.getSelectedItem().toString();
         age = ageEditText.getText().toString();
 
         division = divisionSpinner.getSelectedItem().toString();
         district = districtSpinner.getSelectedItem().toString();
         RadioButton selectedRadiobtn= findViewById(bloodRadioGroup.getCheckedRadioButtonId());
         switch (selectedRadiobtn.getText().toString()){
-            case "ব্লাড":
+            case "রক্ত":
                 donorInfo = "Blood";
                 break;
             case "প্লাজমা":
                 donorInfo = "Plasma";
                 break;
-            case "ব্লাড এবং প্লাজমা":
+            case "রক্ত এবং প্লাজমা":
                 donorInfo = "Blood and Plasma";
                 break;
-            case "কোনোটিই নয়":
+            case "সাধারণ ব্যবহারকারী/গ্রাহক":
+            case "General User/Acceptor":
                 donorInfo = "None";
                 break;
             default:
@@ -308,26 +329,26 @@ public class UpdateUserProfileActivity extends AppCompatActivity {
 
         if (name.isEmpty()) {
             emptyfieldChecker = false;
-            emptyfield += getResources().getString(R.string.update_label_name) + " ";
-            nameEditText.setError(getResources().getString(R.string.update_label_name)+" "+getResources().getString(R.string.update_activity_is_required));
+            emptyfield += getResources().getString(R.string.label_name) + " ";
+            nameEditText.setError(getResources().getString(R.string.label_name)+" "+getResources().getString(R.string.is_required_txt));
+            updateBtn.setEnabled(true);
         }
-        if (thana.isEmpty()) {
-            emptyfieldChecker = false;
-            emptyfield += getResources().getString(R.string.update_label_thana) + " ";
-            thanaEditText.setError(getResources().getString(R.string.update_label_thana)+" "+getResources().getString(R.string.update_activity_is_required));
-        }
+
         if (age.isEmpty()) {
             emptyfieldChecker = false;
-            emptyfield += getResources().getString(R.string.update_label_age) + " ";
-            ageEditText.setError(getResources().getString(R.string.update_label_age)+" "+getResources().getString(R.string.update_activity_is_required));
+            emptyfield += getResources().getString(R.string.label_age_1) + " ";
+            ageEditText.setError(getResources().getString(R.string.label_age_1)+" "+getResources().getString(R.string.is_required_txt));
+            updateBtn.setEnabled(true);
         }
         if (division.isEmpty()) {
             emptyfieldChecker = false;
-            emptyfield += getResources().getString(R.string.update_label_spinner_division) + " ";
+            emptyfield += getResources().getString(R.string.label_division) + " ";
+            updateBtn.setEnabled(true);
         }
         if (district.isEmpty()) {
             emptyfieldChecker = false;
-            emptyfield += getResources().getString(R.string.update_label_spinner_district) + " ";
+            emptyfield += getResources().getString(R.string.label_district) + " ";
+            updateBtn.setEnabled(true);
         }
 
 
@@ -336,7 +357,8 @@ public class UpdateUserProfileActivity extends AppCompatActivity {
 //            retro operations
              updateUserInfo(name, division, district, thana, age,donorInfo);
         } else {
-            emptyfield += getResources().getString(R.string.update_activity_is_required);
+            emptyfield += getResources().getString(R.string.is_required_txt);
+            updateBtn.setEnabled(true);
             ToastCreator.toastCreatorRed(this,emptyfield);
         }
 
@@ -349,7 +371,9 @@ public class UpdateUserProfileActivity extends AppCompatActivity {
         sendingData.enqueue(new Callback<UserDataModel>() {
             @Override
             public void onResponse(Call<UserDataModel> call, Response<UserDataModel> response) {
-                if (response.body().getServerMsg().equals("Success")) {
+                updateBtn.setEnabled(true);
+                if (response.body().getServerMsg().toLowerCase().equals("success")) {
+
                     ToastCreator.toastCreatorGreen(UpdateUserProfileActivity.this, getResources().getString(R.string.update_activity_update_successful));
 //                    update logged in Data
                     loggedInUserName=name;
@@ -367,14 +391,15 @@ public class UpdateUserProfileActivity extends AppCompatActivity {
                     startActivity(intent);
                 }
                 else {
-                    ToastCreator.toastCreatorRed(UpdateUserProfileActivity.this,getResources().getString(R.string.update_activity_update_failed));
+                    ToastCreator.toastCreatorRed(UpdateUserProfileActivity.this,getResources().getString(R.string.failed_to_update_error));
                 }
 
             }
 
             @Override
             public void onFailure(Call<UserDataModel> call, Throwable t) {
-                ToastCreator.toastCreatorRed(UpdateUserProfileActivity.this,   getResources().getString(R.string.update_activity_update_error));
+                updateBtn.setEnabled(true);
+                ToastCreator.toastCreatorRed(UpdateUserProfileActivity.this,   getResources().getString(R.string.connection_error));
             }
         });
 
@@ -385,9 +410,10 @@ public class UpdateUserProfileActivity extends AppCompatActivity {
     private void updateAlertDialog() {
 
         final AlertDialog.Builder builder = new AlertDialog.Builder(UpdateUserProfileActivity.this);
-        builder.setMessage(getResources().getString(R.string.update_activity_confirm_update));
+        builder.setMessage(getResources().getString(R.string.confirm_update_txt));
+        builder.setCancelable(false);
 
-        builder.setPositiveButton(getResources().getString(R.string.update_activity_confirm), new DialogInterface.OnClickListener() {
+        builder.setPositiveButton(getResources().getString(R.string.confirm), new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
 
@@ -398,10 +424,13 @@ public class UpdateUserProfileActivity extends AppCompatActivity {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 dialog.cancel();
+                updateBtn.setEnabled(true);
             }
         });
 
-        builder.show();
+        AlertDialog alertDialog=builder.create();
+        alertDialog.setCanceledOnTouchOutside(false);
+        alertDialog.show();
 
     }
 }

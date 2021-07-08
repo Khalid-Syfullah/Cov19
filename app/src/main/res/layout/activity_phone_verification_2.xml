@@ -8,6 +8,19 @@
     tools:context=".PhoneVerificationActivity2">
 
 
+    <ProgressBar
+        android:id="@+id/phn_ver2_progress_bar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="64dp"
+
+        android:indeterminateDrawable="@drawable/progress_bar_style"
+
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="@+id/phn_ver2_otp_button"
+        app:layout_constraintStart_toStartOf="@+id/phn_ver2_otp_button"
+        app:layout_constraintTop_toBottomOf="@+id/phn_ver2_otp_button" />
+
     <ImageView
         android:id="@+id/phn_ver2_upper_back"
         android:layout_width="match_parent"
@@ -42,7 +55,7 @@
 
         android:layout_marginStart="-16dp"
         android:fontFamily="@font/montserrat_bold"
-        android:text="@string/phn_ver2_header_textview"
+        android:text="@string/phone_verification"
         android:textColor="#ffffff"
         android:textSize="18sp"
         app:layout_constraintBottom_toBottomOf="@+id/phn_ver2_back_button"
@@ -56,10 +69,10 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
 
-        android:layout_marginStart="32dp"
+        android:layout_marginStart="24dp"
         android:layout_marginTop="8dp"
         android:fontFamily="@font/montserrat_bold"
-        android:text="@string/phn_ver2_phone_text"
+        android:text="@string/verify_otp"
         android:textColor="@color/textColorDark"
         android:textSize="16sp"
 
@@ -74,38 +87,39 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
 
+        android:layout_marginTop="24dp"
         android:background="@drawable/edit_text_dark"
         android:fontFamily="@font/raleway_bold"
-        android:hint="@string/phn_ver2_otp"
+        android:hint="@string/password_hint"
         android:inputType="numberDecimal"
         android:maxLength="6"
         android:minHeight="40dp"
         android:padding="15dp"
         android:textColor="@color/textColorDark"
         android:textSize="14sp"
-        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="@+id/phn_ver2_otp_button"
         app:layout_constraintStart_toStartOf="@+id/phn_ver2_otp_button"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.499" />
+        app:layout_constraintTop_toBottomOf="@+id/phn_ver2_phone_text" />
 
     <Button
 
         android:id="@+id/phn_ver2_otp_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="44dp"
-        android:layout_marginTop="40dp"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="32dp"
+        android:layout_marginEnd="24dp"
         android:background="@drawable/button_style_colored"
         android:fontFamily="@font/montserrat_bold"
         android:maxWidth="350dp"
         android:minWidth="320dp"
-        android:text="@string/phn_ver2_otp_button"
+        android:text="@string/verify_otp"
         android:textColor="#ffffff"
         app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.592" />
+        app:layout_constraintTop_toBottomOf="@+id/phn_ver2_otp"
+        app:layout_constraintVertical_bias="0.0" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>
